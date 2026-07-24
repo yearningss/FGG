@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FGG Translator</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --panel: #161b22;
+      --border: #30363d;
+      --border-focus: #58a6ff;
+      --text: #c9d1d9;
+      --text-bold: #f0f6fc;
+      --text-muted: #8b949e;
+      --accent: #238636;
+      --accent-hover: #2ea043;
+      --blue: #58a6ff;
+      --red: #f85149;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--text-bold);
+    }
+
+    .brand-tag {
+      font-size: 11px;
+      background: rgba(88, 166, 255, 0.1);
+      color: var(--blue);
+      border: 1px solid rgba(88, 166, 255, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    /* LAYOUT */
+    .container {
+      max-width: 1180px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 20px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+    }
+
+    .panel-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-bold);
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* FORM ELEMENTS */
+    .field {
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      color: var(--text-bold);
+      font-size: 13px;
+      font-family: inherit;
+    }
+
+    input[type="text"]:focus, select:focus {
+      outline: none;
+      border-color: var(--border-focus);
+    }
+
+    /* CATEGORIZED LANGUAGES */
+    .category-group {
+      margin-bottom: 10px;
+    }
+
+    .category-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--blue);
+      margin-bottom: 6px;
+      padding-bottom: 2px;
+      border-bottom: 1px dashed var(--border);
+      text-transform: uppercase;
+    }
+
+    .lang-container {
+      max-height: 240px;
+      overflow-y: auto;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+    }
+
+    .lang-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .lang-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .lang-item input {
+      accent-color: var(--blue);
+    }
+
+    .btn-group {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .btn-text {
+      background: none;
+      border: none;
+      color: var(--blue);
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    /* BUTTONS */
+    .btn-primary {
+      width: 100%;
+      background: var(--accent);
+      color: #ffffff;
+      border: 1px solid rgba(27, 31, 36, 0.15);
+      border-radius: 6px;
+      padding: 9px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* PROGRESS & LOGS */
+    .progress-track {
+      height: 4px;
+      background: var(--bg);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--blue);
+      transition: width 0.2s ease;
+    }
+
+    .log-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      height: 480px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      color: var(--text);
+    }
+
+    .log-row { margin-bottom: 4px; }
+    .log-success { color: #56d364; }
+    .log-error { color: var(--red); }
+    .log-info { color: var(--blue); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      FGG Fast Global Translator
+      <span class="brand-tag">v2.0</span>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="grid">
+      
+      <!-- LEFT PANEL -->
+      <div class="panel">
+        <div class="panel-title">Конфигурация</div>
+
+        <div class="field">
+          <label>Исходный файл</label>
+          <input type="text" id="inputFile" value="оригинал/rus.txt">
+        </div>
+
+        <div class="field">
+          <label>Папка вывода</label>
+          <input type="text" id="outputDir" value="переводы">
+        </div>
+
+        <div class="field">
+          <label>Движок перевода</label>
+          <select id="providerSelect">
+            <option value="google">Google Translate</option>
+            <option value="openai">OpenAI GPT-4o</option>
+            <option value="mock">Mock Engine (Тест)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Потоки (Workers): <span id="workerNum" style="color:var(--text-bold)">5</span></label>
+          <input type="range" id="workers" min="1" max="15" value="5" style="width:100%" oninput="document.getElementById('workerNum').innerText = this.value">
+        </div>
+
+        <div class="field">
+          <div class="btn-group">
+            <label>Языки перевода (по категориям)</label>
+            <div>
+              <button class="btn-text" onclick="toggleLangs(true)">Все</button> | 
+              <button class="btn-text" onclick="toggleLangs(false)">Сброс</button>
+            </div>
+          </div>
+          
+          <div class="lang-container">
+            <!-- 🔤 Латиница -->
+            <div class="category-group">
+              <div class="category-title">🔤 Латиница (Европа & Мир)</div>
+              <div class="lang-grid">
+                <label class="lang-item"><input type="checkbox" value="en" checked> English (en)</label>
+                <label class="lang-item"><input type="checkbox" value="de" checked> Deutsch (de)</label>
+                <label class="lang-item"><input type="checkbox" value="fr"> Français (fr)</label>
+                <label class="lang-item"><input type="checkbox" value="es"> Español (es)</label>
+                <label class="lang-item"><input type="checkbox" value="it"> Italiano (it)</label>
+                <label class="lang-item"><input type="checkbox" value="pt"> Português (pt)</label>
+                <label class="lang-item"><input type="checkbox" value="pl"> Polski (pl)</label>
+                <label class="lang-item"><input type="checkbox" value="tr"> Türkçe (tr)</label>
+                <label class="lang-item"><input type="checkbox" value="nl"> Nederlands (nl)</label>
+                <label class="lang-item"><input type="checkbox" value="sv"> Svenska (sv)</label>
+                <label class="lang-item"><input type="checkbox" value="cs"> Čeština (cs)</label>
+                <label class="lang-item"><input type="checkbox" value="hu"> Magyar (hu)</label>
+                <label class="lang-item"><input type="checkbox" value="ro"> Română (ro)</label>
+                <label class="lang-item"><input type="checkbox" value="da"> Dansk (da)</label>
+                <label class="lang-item"><input type="checkbox" value="no"> Norsk (no)</label>
+                <label class="lang-item"><input type="checkbox" value="fi"> Suomi (fi)</label>
+              </div>
+            </div>
+
+            <!-- ⛩️ Иероглифы & Азия -->
+            <div class="category-group">
+              <div class="category-title">⛩️ Иероглифы & Азия</div>
+              <div class="lang-grid">
+                <label class="lang-item"><input type="checkbox" value="ja"> 日本語 (ja)</label>
+                <label class="lang-item"><input type="checkbox" value="zh-cn"> 简体中文 (zh-CN)</label>
+                <label class="lang-item"><input type="checkbox" value="zh-tw"> 繁體中文 (zh-TW)</label>
+                <label class="lang-item"><input type="checkbox" value="ko"> 한국어 (ko)</label>
+                <label class="lang-item"><input type="checkbox" value="th"> ไทย (th)</label>
+                <label class="lang-item"><input type="checkbox" value="vi"> Tiếng Việt (vi)</label>
+                <label class="lang-item"><input type="checkbox" value="hi"> हिन्दी (hi)</label>
+              </div>
+            </div>
+
+            <!-- 🪆 Кириллица -->
+            <div class="category-group">
+              <div class="category-title">🪆 Кириллица</div>
+              <div class="lang-grid">
+                <label class="lang-item"><input type="checkbox" value="uk"> Українська (uk)</label>
+                <label class="lang-item"><input type="checkbox" value="be"> Беларуская (be)</label>
+                <label class="lang-item"><input type="checkbox" value="bg"> Български (bg)</label>
+                <label class="lang-item"><input type="checkbox" value="kk"> Қазақша (kk)</label>
+                <label class="lang-item"><input type="checkbox" value="ky"> Кыргызча (ky)</label>
+                <label class="lang-item"><input type="checkbox" value="sr"> Српски (sr)</label>
+                <label class="lang-item"><input type="checkbox" value="mn"> Монгол (mn)</label>
+                <label class="lang-item"><input type="checkbox" value="tg"> Тоҷикӣ (tg)</label>
+                <label class="lang-item"><input type="checkbox" value="tt"> Татарча (tt)</label>
+              </div>
+            </div>
+
+            <!-- 🌙 Арабское письмо -->
+            <div class="category-group">
+              <div class="category-title">🌙 Арабское письмо & Вязь</div>
+              <div class="lang-grid">
+                <label class="lang-item"><input type="checkbox" value="ar"> العربية (ar)</label>
+                <label class="lang-item"><input type="checkbox" value="fa"> فارسی (fa)</label>
+                <label class="lang-item"><input type="checkbox" value="he"> עברית (he)</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="startBtn" onclick="startTranslation()">Запустить перевод</button>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div class="panel">
+        <div class="panel-title">Лог вывода</div>
+
+        <div class="progress-track">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="log-box" id="logBox">
+          <div class="log-row">[system] FGG ready. Select options and press 'Запустить перевод'.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function toggleLangs(state) {
+      document.querySelectorAll('.lang-item input').forEach(cb => cb.checked = state);
+    }
+
+    function appendLog(text, type = '') {
+      const box = document.getElementById('logBox');
+      const row = document.createElement('div');
+      row.className = 'log-row ' + type;
+      row.innerText = text;
+      box.appendChild(row);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    async function startTranslation() {
+      const btn = document.getElementById('startBtn');
+      const bar = document.getElementById('progressBar');
+      
+      const inputFile = document.getElementById('inputFile').value;
+      const outputDir = document.getElementById('outputDir').value;
+      const workers = parseInt(document.getElementById('workers').value);
+      const provider = document.getElementById('providerSelect').value;
+      const selectedLangs = Array.from(document.querySelectorAll('.lang-item input:checked')).map(c => c.value);
+
+      if (!selectedLangs.length) {
+        alert("Выберите языки для перевода");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = "Выполняется...";
+      bar.style.width = '15%';
+
+      appendLog(`\n[job] Starting translation for: ${selectedLangs.join(', ')}`, 'log-info');
+      appendLog(`[job] Input: ${inputFile} | Provider: ${provider.toUpperCase()} | Workers: ${workers}`);
+
+      try {
+        const res = await fetch('/api/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            input_file: inputFile,
+            output_dir: outputDir,
+            langs: selectedLangs,
+            workers: workers,
+            mock: provider === 'mock'
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          bar.style.width = '100%';
+          appendLog('[success] Translation finished successfully!', 'log-success');
+          data.results.forEach(r => {
+            appendLog(`  -> [${r.lang.toUpperCase()}] Translated: ${r.translated}, Reused: ${r.reused}, Elapsed: ${r.elapsed}s`, 'log-success');
+            appendLog(`     Output: ${r.output_file}`);
+          });
+        } else {
+          bar.style.width = '0%';
+          appendLog(`[error] ${data.error}`, 'log-error');
+        }
+      } catch (err) {
+        bar.style.width = '0%';
+        appendLog(`[error] Network failure: ${err.message}`, 'log-error');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Запустить перевод";
+      }
+    }
+  </script>
+</body>
+</html>
