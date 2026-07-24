@@ -113,7 +113,7 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
                     "ping_ms": ping_ms,
                     "status_code": status_code,
                     "endpoint": final_url,
-                    "status": "🟢 Ключ валиден и модель доступна!"
+                    "status": "🟢 Key valid & model active!"
                 })
             except urllib.error.HTTPError as he:
                 ping_ms = int((time.time() - start_t) * 1000)
@@ -132,13 +132,13 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
                             "ping_ms": ping_ms,
                             "status_code": status_code,
                             "endpoint": final_url,
-                            "status": "🟢 Ключ валиден (без Bearer)!"
+                            "status": "🟢 Key valid (without Bearer prefix)!"
                         })
                         return
                     except Exception:
                         pass
 
-                status_desc = "🔴 401 Unauthorized (Роутер отверг ключ или имя модели)" if he.code == 401 else f"🔴 Ошибка сервера ({he.code})"
+                status_desc = "🔴 401 Unauthorized (Check API Key & Model permissions)" if he.code == 401 else f"🔴 Server Error ({he.code})"
                 self._send_json({
                     "success": False,
                     "model_key": model_key,
@@ -158,7 +158,7 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
                     "status_code": 0,
                     "endpoint": target_url,
                     "error": str(exc),
-                    "status": "🔴 Не удалось подключиться к серверу"
+                    "status": "🔴 Failed to connect to server"
                 })
 
         elif parsed_url.path == "/api/translate":

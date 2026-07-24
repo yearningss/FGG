@@ -29,7 +29,7 @@ ASCII_BANNER = r"""
 """
 
 LANGUAGES_BY_CATEGORY: Dict[str, Dict[str, Tuple[str, str]]] = {
-    "Латиница (Европа & Мир)": {
+    "Latin Script (Europe & Global)": {
         "en": ("en", "ENGLISH"),
         "de": ("de", "DEUTSCH"),
         "fr": ("fr", "FRANCAIS"),
@@ -47,7 +47,7 @@ LANGUAGES_BY_CATEGORY: Dict[str, Dict[str, Tuple[str, str]]] = {
         "no": ("no", "NORSK"),
         "fi": ("fi", "SUOMI"),
     },
-    "Иероглифы & Азия": {
+    "Asian & Logographic": {
         "ja": ("ja", "JAPANESE"),
         "zh-cn": ("zh-CN", "SIMPLIFIED CHINESE"),
         "zh-tw": ("zh-TW", "TRADITIONAL CHINESE"),
@@ -56,7 +56,7 @@ LANGUAGES_BY_CATEGORY: Dict[str, Dict[str, Tuple[str, str]]] = {
         "vi": ("vi", "VIETNAMESE"),
         "hi": ("hi", "HINDI"),
     },
-    "Кириллица": {
+    "Cyrillic Script": {
         "uk": ("uk", "UKRAINIAN"),
         "be": ("be", "BELARUSIAN"),
         "bg": ("bg", "BULGARIAN"),
@@ -67,7 +67,7 @@ LANGUAGES_BY_CATEGORY: Dict[str, Dict[str, Tuple[str, str]]] = {
         "tg": ("tg", "TAJIK"),
         "tt": ("tt", "TATAR"),
     },
-    "Арабское письмо": {
+    "Arabic Script": {
         "ar": ("ar", "ARABIC"),
         "fa": ("fa", "PERSIAN"),
         "he": ("he", "HEBREW"),
@@ -94,7 +94,8 @@ def run_cli() -> int:
     parser.add_argument("--provider", choices=["google", "ai", "mock"], default="google", help="Translation backend")
     
     # AI CLI arguments
-    parser.add_argument("--ai-model", type=str, default="openai-gpt4o-mini", help="AI model key (gpt4o, claude, gemini, deepseek, ollama)")
+    parser.add_argument("--ai-model", type=str, default="gpt-4o-mini", help="AI model key (gpt-4o-mini, claude-opus-4-8, deepseek-r1, etc.)")
+    parser.add_argument("--custom-model", type=str, default="", help="Custom model ID string for router/proxy")
     parser.add_argument("--api-key", type=str, default="", help="AI provider API key")
     parser.add_argument("--base-url", type=str, default="", help="Custom base URL endpoint")
     parser.add_argument("--ai-prompt", type=str, default="", help="Custom AI localization prompt")
@@ -121,6 +122,7 @@ def run_cli() -> int:
 
         provider = UnifiedAITranslator(
             model_key=args.ai_model,
+            custom_model_name=args.custom_model,
             api_key=args.api_key,
             base_url=args.base_url,
             custom_prompt=args.ai_prompt,
@@ -136,7 +138,7 @@ def run_cli() -> int:
     print(f"[*] Input File : {args.input}")
     print(f"[*] Output Dir : {args.output_dir}")
     print(f"[*] Threads    : {args.workers}")
-    print(f"[*] Provider   : {args.provider.upper()} ({args.ai_model if args.provider == 'ai' else ''})")
+    print(f"[*] Provider   : {args.provider.upper()} ({args.custom_model or args.ai_model if args.provider == 'ai' else ''})")
     print("=" * 65)
 
     failed_langs = []

@@ -1,130 +1,100 @@
-# ⚡ FGG 2.0 — Fast Global Translator
+# FGG 2.0 — High-Performance Game Localization & AI Translation Suite
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Version-2.0.0-00f2fe?style=for-the-badge&logo=python" alt="Version 2.0">
-  <img src="https://img.shields.io/badge/Python-3.8+-7928ca?style=for-the-badge&logo=python" alt="Python Version">
-  <img src="https://img.shields.io/badge/License-MIT-ff0080?style=for-the-badge" alt="License">
-  <img src="https://img.shields.io/badge/Game_Localization-Engine-00f2fe?style=for-the-badge" alt="Game Localization">
-</p>
+[![Python Version](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![AI Models](https://img.shields.io/badge/AI%20Models-100%2B-purple.svg)](#supported-ai-models)
 
-**FGG 2.0 (Fast Global Translator)** — это мощный, высокоскоростной и надежный движок автоматической локализации видеоигр и модов. 
-
-Поддерживает сохранение всех игровых тегов (`{clr:red}`, `[J]`, `%s`, `\n`), параллельную многопоточность, перевод через **Google Translate**, **OpenAI GPT-4o / LLM**, встроенный **Web UI Dashboard** в браузере, систему кэширования (Translation Memory) и автоматическую проверку ошибок (QA Validator).
+**FGG 2.0** is an enterprise-grade video game localization toolkit designed for indie developers, translation studios, and modders. It features an automated placeholder protection engine, SQLite Translation Memory, real-time AI stream reasoning logs, ping latency diagnostics, and support for over 100+ AI models across major providers and local servers.
 
 ---
 
-## 🔥 Ключевые возможности FGG 2.0
+## 🌟 Key Features
 
-* 🌐 **Многоязычный автоматический перевод**: Поддержка 20+ основных мировых языков.
-* 🛡️ **Защита игровых тегов и переменных**: Игровые конструкции `{clr:red}`, `{clr/}`, `[J]`, `%s`, `%d`, `{0}`, `\n`, `\t` и BBCode не ломаются при переводе.
-* 🖥️ **Встроенный Web UI Dashboard**: Графический интерфейс прямо в браузере — запуск перевода в один клик, выбор языков, отслеживание в реальном времени.
-* 🤖 **AI & LLM Поддержка (GPT-4o)**: Возможность перевода через нейросети с учётом игрового контекста и терминологии.
-* 💾 **Translation Memory & Glossaries**: Повторные и схожие строки берутся из локальной базы данных SQLite, экономя время и трафик.
-* 🔍 **QA Validator (Проверка качества)**: Автоматическая проверка перевода на пропущенные теги, несбалансированные скобки или кавычки.
-* ⚡ **Высокая скорость (Multi-threading)**: Настраиваемый многопоточный режим (Workers 5-15) для мгновенной обработки больших файлов локализаций.
+* **🛡️ Smart Placeholder Protection (`PlaceholderEngine`)**  
+  Safeguards color tags (`{clr:red}`), key icons (`[J]`), format parameters (`%s`, `%d`, `{0}`), control sequences (`\n`), and HTML/BBCode during translation.
+
+* **🤖 100+ AI Models & Custom Proxy Routers**  
+  Built-in support for OpenAI (GPT-5, o3, o1, GPT-4o), Anthropic (Claude Opus 4.8 / 4.1, Sonnet), Google Gemini (2.5 / 2.0), DeepSeek (V3, R1), Grok 4, Llama 4, Qwen 3, Mistral, and local servers (Ollama, vLLM, LM Studio). Fully compatible with custom API routers like `agentrouter.org` and OpenRouter.
+
+* **📡 AI Ping & Connection Latency Benchmark**  
+  Real-time connection testing tool displaying server ping (latency in ms), HTTP status codes, verified model IDs, and endpoint routing.
+
+* **💾 SQLite Translation Memory & Terminology Glossary**  
+  Caches translated segments locally in `.fgg_cache.sqlite` to prevent duplicate API calls, reduce costs, and ensure glossary term consistency.
+
+* **🔍 Quality Assurance (QA) Engine**  
+  Validates tag parity, bracket balance, quotes, and empty output post-translation.
+
+* **🌐 Standalone Web Dashboard & CLI Interface**  
+  Includes both an interactive GitHub Dark-style Web UI and a command-line interface.
 
 ---
 
-## 🚀 Быстрый запуск
+## 🚀 Quick Start
 
-### 1. Веб-интерфейс (Web UI) в браузере:
+### 1. Requirements & Installation
 
-Запустите веб-панель одной командой:
+```bash
+git clone https://github.com/yearningss/FGG.git
+cd FGG
+pip install deep_translator
+```
+
+### 2. Launch the Web UI
+
+Run the single-click web launcher:
 
 ```bash
 python web_launcher.py
 ```
-Или через CLI:
+
+Open **`http://localhost:8080`** in your browser.
+
+### 3. Command Line Interface (CLI)
+
 ```bash
-python final_translator.py --web
-```
-Интерфейс откроется по адресу `http://localhost:8080`.
-
----
-
-### 2. Запуск через командную строку (CLI):
-
-#### 🇩🇪 Перевод на немецкий язык (Google Translate):
-```bash
-python final_translator.py --langs de
-```
-
-#### ⚡ Быстрый многопоточный перевод на несколько языков:
-```bash
-python final_translator.py --langs de en fr es ja --workers 10
-```
-
-#### 🤖 Перевод через OpenAI GPT-4o:
-```bash
-python final_translator.py --langs de --provider openai --openai-key "YOUR_API_KEY"
-```
-
-#### 🧪 Тестовый режим (Mock / Dry Run):
-```bash
-python final_translator.py --langs de --provider mock
+python final_translator.py --input оригинал/rus.txt --out переводы --langs en de ja zh-cn --provider google --workers 5
 ```
 
 ---
 
-## 🎮 Поддерживаемые форматы и теги
+## 🎛️ Configuration & Fine-Tuning
 
-FGG автоматически распознаёт и сохраняет:
-* Формат локализаций `key = "value"` (GameMaker / Hotline Miami / Pizza Tower / Fangames).
-* `.json` файлы конфигураций и локализаций.
-* Теги цветов и стилей: `{clr:red}`, `{clr/}`, `[color=#fff]`
-* Кнопки и управления: `[J]`, `[M]`, `[G]`, `[SPACE]`
-* Переменные кода: `%s`, `%d`, `{player_name}`, `{0}`
-* Служебные символы: `\n`, `\t`, `\r`
+### AI Hyperparameters
+- **Temperature**: Controls creativity (`0.0` for deterministic game localization, `1.0` for creative dialog).
+- **Top P**: Nucleus sampling filter.
+- **Max Output Tokens**: Up to 8192 tokens per batch.
+- **Reasoning Effort**: Low / Medium / High for DeepSeek R1, OpenAI o1, o3, and Thinking models.
 
-Пример:
-```text
-# Исходный текст:
-tutorial1 = "Нажми [J], чтобы сделать прыжок в {clr:red}бездну{clr/}!"
+---
 
-# После перевода на немецкий:
-tutorial1 = "Drücken Sie [J], um einen Sprung in {clr:red}Abgrund{clr/} zu machen!"
+## 📁 Repository Structure
+
 ```
-
----
-
-## 🛠️ Параметры CLI
-
-| Флаг | Описание | Значение по умолчанию |
-| :--- | :--- | :--- |
-| `--langs` | Список кодов языков (`de`, `en`, `fr`, `es`, `ja`, `zh-cn`...) | Все доступные |
-| `--input` | Путь к исходному файлу локализации | `оригинал/rus.txt` |
-| `--output-dir` | Папка для сохранения готовых переводов | `переводы/` |
-| `--workers` | Количество параллельных потоков | `5` |
-| `--provider` | Движок перевода (`google`, `openai`, `mock`) | `google` |
-| `--force` | Принудительный переперевод всех строк | `False` |
-| `--web` | Запуск Web UI панели | `False` |
-
----
-
-## 🏗️ Структура проекта
-
-```text
 FGG/
-├── fgg/                       # Ядро системы FGG 2.0
-│   ├── core/                  # Парсеры, теги, QA, кэш и движок
-│   │   ├── engine.py          # Основной контроллер перевода
-│   │   ├── placeholders.py    # Защита игровых тегов и переменных
-│   │   ├── parser.py          # Парсер файлов (key=val, json, etc)
-│   │   ├── qa.py              # QA-валидатор ошибок
-│   │   └── glossary.py        # Глоссарий и Translation Memory
-│   ├── providers/             # Провайдеры (Google, OpenAI GPT, Mock)
-│   ├── web/                   # Standalone Web Dashboard
-│   └── cli.py                 # CLI интерфейс 2.0
-├── оригинал/                  # Исходные локализации
-│   └── rus.txt
-├── переводы/                  # Сгенерированные переводы
-├── final_translator.py        # Главная точка входа (CLI)
-└── web_launcher.py            # Быстрый запуск Web UI
+├── fgg/
+│   ├── core/
+│   │   ├── engine.py          # Multi-threaded translation coordinator
+│   │   ├── glossary.py        # Glossary rules & SQLite Translation Memory
+│   │   ├── parser.py          # KeyValue and JSON localization parsers
+│   │   ├── placeholders.py    # Game tag protection & restoration
+│   │   └── qa.py              # Localization Quality Assurance validator
+│   ├── providers/
+│   │   ├── ai_provider.py     # Multi-model AI engine (100+ models)
+│   │   ├── google_provider.py # Free Google Translate provider
+│   │   └── mock_provider.py   # Dry-run testing provider
+│   ├── web/
+│   │   ├── app.py             # REST API & static web server
+│   │   └── static/
+│   │       └── index.html     # Web UI Dashboard
+│   └── cli.py                 # CLI entry point
+├── final_translator.py        # Main CLI entry script
+├── web_launcher.py            # Web UI launcher script
+└── README.md                  # Documentation
 ```
 
 ---
 
-## 📝 Лицензия
+## 📄 License
 
-Проект распространяется под лицензией MIT.
-Разработано с 💖 для геймдева и сообщества локализаторов игр.
+MIT License. Free for commercial and non-commercial game localization projects.

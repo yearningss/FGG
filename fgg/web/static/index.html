@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FGG Translator</title>
+  <title>FGG Game Localization Suite</title>
   <style>
     :root {
       --bg: #0d1117;
@@ -326,8 +326,8 @@
 
   <header>
     <div class="brand">
-      FGG Fast Global Translator
-      <span class="brand-tag">v2.0 (AI Latency & Ping Diagnostics)</span>
+      FGG Game Localization Suite
+      <span class="brand-tag">v2.0 (English Edition)</span>
     </div>
   </header>
 
@@ -337,38 +337,38 @@
       <!-- LEFT PANEL -->
       <div>
         <div class="panel">
-          <div class="panel-title">Конфигурация</div>
+          <div class="panel-title">Configuration</div>
 
           <div class="field">
-            <label>Исходный файл</label>
+            <label>Source File Path</label>
             <input type="text" id="inputFile" value="оригинал/rus.txt">
           </div>
 
           <div class="field">
-            <label>Папка вывода</label>
+            <label>Output Directory</label>
             <input type="text" id="outputDir" value="переводы">
           </div>
 
           <div class="field">
-            <label>Движок перевода</label>
+            <label>Translation Engine</label>
             <select id="providerSelect" onchange="onProviderChange(this.value)">
-              <option value="google">Google Translate (Бесплатно & Быстро)</option>
-              <option value="ai">🤖 AI / LLM Engine (Пинг & Подробная проверка)</option>
-              <option value="mock">Mock Engine (Тестовый режим)</option>
+              <option value="google">Google Translate (Free & Fast)</option>
+              <option value="ai">🤖 AI / LLM Engine (Ping & Diagnostics)</option>
+              <option value="mock">Mock Engine (Test Mode)</option>
             </select>
           </div>
 
           <!-- GRANULAR AI CONFIG & DIAGNOSTIC PING -->
           <div class="ai-panel" id="aiConfigPanel">
-            <div class="ai-panel-title">🤖 Поиск & Настройка Модели ИИ</div>
+            <div class="ai-panel-title">🤖 AI Model Search & Tuning</div>
 
             <div class="search-box">
-              <label>🔍 Быстрый поиск модели ИИ</label>
-              <input type="text" id="aiSearchInput" placeholder="Поиск (например: GPT-5, Claude 3.7, DeepSeek R1, Grok 4, Llama 4, Qwen3)..." oninput="filterAiModels(this.value)">
+              <label>🔍 Quick AI Model Search</label>
+              <input type="text" id="aiSearchInput" placeholder="Search (e.g. GPT-5, Claude 3.7, DeepSeek R1, Grok 4, Llama 4, Qwen3)..." oninput="filterAiModels(this.value)">
             </div>
 
             <div class="field">
-              <label>Выбранная модель ИИ (<span id="modelCountLabel">100+ доступно</span>)</label>
+              <label>Selected AI Model (<span id="modelCountLabel">100+ available</span>)</label>
               <select id="aiModelSelect" size="6" style="height:130px;" onchange="onAiModelChange(this.value)">
                 <optgroup label="OpenAI">
                   <option value="gpt-5">GPT-5</option>
@@ -578,39 +578,39 @@
             </div>
 
             <div class="field">
-              <label>Кастомное имя / ID модели (Опционально, напр: anthropic/claude-3.5-sonnet)</label>
-              <input type="text" id="aiCustomModelName" placeholder="Оставьте пустым для модели по умолчанию">
+              <label>Custom Model Name / ID (Optional, e.g. anthropic/claude-3.5-sonnet)</label>
+              <input type="text" id="aiCustomModelName" placeholder="Leave empty for default model ID">
             </div>
 
             <!-- BUTTON: TEST MODEL PING & CONNECTION -->
-            <button class="btn-secondary" id="pingBtn" onclick="pingAiModel()">⚡ Проверить модель подробнее (Пинг & Соединение)</button>
+            <button class="btn-secondary" id="pingBtn" onclick="pingAiModel()">⚡ Test Model Connection & Ping</button>
 
             <!-- DIAGNOSTIC PING RESULTS -->
             <div class="ping-result-box" id="pingResultBox">
-              <div class="ping-row"><span>Статус ответа:</span><span class="ping-val" id="pingStatus">-</span></div>
-              <div class="ping-row"><span>Пинг до сервера:</span><span class="ping-val" id="pingMs">-</span></div>
-              <div class="ping-row"><span>HTTP Код:</span><span class="ping-val" id="pingHttp">-</span></div>
-              <div class="ping-row"><span>Модель ID:</span><span class="ping-val" id="pingModelId">-</span></div>
-              <div class="ping-row"><span>Эндпоинт:</span><span class="ping-val" id="pingEndpoint" style="font-size:10px;">-</span></div>
+              <div class="ping-row"><span>Response Status:</span><span class="ping-val" id="pingStatus">-</span></div>
+              <div class="ping-row"><span>Server Latency:</span><span class="ping-val" id="pingMs">-</span></div>
+              <div class="ping-row"><span>HTTP Code:</span><span class="ping-val" id="pingHttp">-</span></div>
+              <div class="ping-row"><span>Model ID:</span><span class="ping-val" id="pingModelId">-</span></div>
+              <div class="ping-row"><span>Endpoint:</span><span class="ping-val" id="pingEndpoint" style="font-size:10px;">-</span></div>
             </div>
 
             <div class="field" style="margin-top:10px;">
-              <label>API Ключ (Для локального Ollama можно оставить пустым)</label>
+              <label>API Key (Can be empty for local Ollama)</label>
               <input type="password" id="aiApiKey" placeholder="sk-...">
             </div>
 
             <div class="field">
-              <label>Base URL Endpoint (Автоматически подставляется)</label>
+              <label>Base URL Endpoint (Auto-populated)</label>
               <input type="text" id="aiBaseUrl" value="https://api.openai.com/v1">
             </div>
 
             <div class="field">
-              <label>Игровой контекст / Промпт</label>
-              <textarea id="aiCustomPrompt" rows="2" placeholder="Особенности жанра, стиль текста (RPG, хулиганский сленг, фэнтези)"></textarea>
+              <label>Game Context / Custom Prompt</label>
+              <textarea id="aiCustomPrompt" rows="2" placeholder="Genre rules, tone of voice (RPG, fantasy, slang, Cyberpunk)"></textarea>
             </div>
 
             <div style="font-size:11px; font-weight:600; color:var(--purple); margin:10px 0 6px 0; text-transform:uppercase;">
-              🎛️ Гиперпараметры перевода
+              🎛️ AI Hyperparameters
             </div>
 
             <div class="tuning-grid">
@@ -647,22 +647,22 @@
           </div>
 
           <div class="field">
-            <label>Потоки (Workers): <span id="workerNum" style="color:var(--text-bold)">5</span></label>
+            <label>Worker Threads: <span id="workerNum" style="color:var(--text-bold)">5</span></label>
             <input type="range" id="workers" min="1" max="15" value="5" style="width:100%" oninput="document.getElementById('workerNum').innerText = this.value">
           </div>
 
           <div class="field">
             <div class="btn-group">
-              <label>Языки перевода (по категориям)</label>
+              <label>Target Languages (Categorized)</label>
               <div>
-                <button class="btn-text" onclick="toggleLangs(true)">Все</button> | 
-                <button class="btn-text" onclick="toggleLangs(false)">Сброс</button>
+                <button class="btn-text" onclick="toggleLangs(true)">Select All</button> | 
+                <button class="btn-text" onclick="toggleLangs(false)">Clear</button>
               </div>
             </div>
             
             <div class="lang-container">
               <div class="category-group">
-                <div class="category-title">🔤 Латиница (Европа & Мир)</div>
+                <div class="category-title">🔤 Latin Script (Europe & Global)</div>
                 <div class="lang-grid">
                   <label class="lang-item"><input type="checkbox" value="en" checked> English (en)</label>
                   <label class="lang-item"><input type="checkbox" value="de" checked> Deutsch (de)</label>
@@ -676,7 +676,7 @@
               </div>
 
               <div class="category-group">
-                <div class="category-title">⛩️ Иероглифы & Азия</div>
+                <div class="category-title">⛩️ Asian & Logographic</div>
                 <div class="lang-grid">
                   <label class="lang-item"><input type="checkbox" value="ja"> 日本語 (ja)</label>
                   <label class="lang-item"><input type="checkbox" value="zh-cn"> 简体中文 (zh-CN)</label>
@@ -688,7 +688,7 @@
               </div>
 
               <div class="category-group">
-                <div class="category-title">🪆 Кириллица</div>
+                <div class="category-title">🪆 Cyrillic Script</div>
                 <div class="lang-grid">
                   <label class="lang-item"><input type="checkbox" value="uk"> Українська (uk)</label>
                   <label class="lang-item"><input type="checkbox" value="be"> Беларуская (be)</label>
@@ -698,7 +698,7 @@
               </div>
 
               <div class="category-group">
-                <div class="category-title">🌙 Арабское письмо</div>
+                <div class="category-title">🌙 Arabic Script</div>
                 <div class="lang-grid">
                   <label class="lang-item"><input type="checkbox" value="ar"> العربية (ar)</label>
                   <label class="lang-item"><input type="checkbox" value="fa"> فارسی (fa)</label>
@@ -708,32 +708,32 @@
             </div>
           </div>
 
-          <button class="btn-primary" id="startBtn" onclick="startTranslation()">Запустить перевод</button>
+          <button class="btn-primary" id="startBtn" onclick="startTranslation()">Start Translation</button>
         </div>
       </div>
 
       <!-- RIGHT PANEL -->
       <div>
         <div class="panel">
-          <div class="panel-title">Системный лог вывода</div>
+          <div class="panel-title">System Execution Log</div>
 
           <div class="progress-track">
             <div class="progress-bar" id="progressBar"></div>
           </div>
 
           <div class="log-box" id="logBox">
-            <div class="log-row">[system] FGG ready. Select options and press 'Запустить перевод'.</div>
+            <div class="log-row">[system] FGG ready. Select options and press 'Start Translation'.</div>
           </div>
         </div>
 
         <div class="panel">
           <div class="panel-title">
-            🧠 Лог мыслей & сырых ответов ИИ
+            🧠 AI Stream & Reasoning Log
             <span style="font-size:10px; color:var(--purple);">STREAM LOG</span>
           </div>
 
           <div class="ai-log-box" id="aiLogBox">
-            <div class="log-row log-ai">[AI Log] Здесь отображаются мысли ИИ (Reasoning), сырые JSON отклики и latency моделей.</div>
+            <div class="log-row log-ai">[AI Log] AI reasoning process, raw JSON responses, and latency metrics will appear here.</div>
           </div>
         </div>
       </div>
@@ -809,7 +809,7 @@
         }
       });
 
-      document.getElementById('modelCountLabel').innerText = `${visibleCount} найдено`;
+      document.getElementById('modelCountLabel').innerText = `${visibleCount} found`;
     }
 
     function onAiModelChange(modelKey) {
@@ -837,10 +837,10 @@
       const aiBaseUrl = document.getElementById('aiBaseUrl').value;
 
       btn.disabled = true;
-      btn.innerText = "⏳ Выполняется пинг...";
+      btn.innerText = "⏳ Testing Connection...";
       pingBox.style.display = 'block';
 
-      document.getElementById('pingStatus').innerText = 'Тестирование...';
+      document.getElementById('pingStatus').innerText = 'Testing...';
       document.getElementById('pingMs').innerText = '...';
       document.getElementById('pingHttp').innerText = '...';
       document.getElementById('pingModelId').innerText = customModelName || aiModel;
@@ -859,7 +859,7 @@
         });
 
         const data = await res.json();
-        document.getElementById('pingStatus').innerText = data.status || (data.success ? '🟢 Успешно' : '🔴 Ошибка');
+        document.getElementById('pingStatus').innerText = data.status || (data.success ? '🟢 Success' : '🔴 Error');
         document.getElementById('pingStatus').style.color = data.success ? '#56d364' : '#f85149';
         document.getElementById('pingMs').innerText = `${data.ping_ms} ms`;
         document.getElementById('pingHttp').innerText = data.status_code ? `${data.status_code}` : 'N/A';
@@ -871,12 +871,12 @@
           appendAiLog(`❌ [Ping Details] ${data.error}`);
         }
       } catch (err) {
-        document.getElementById('pingStatus').innerText = '🔴 Сетевая ошибка';
+        document.getElementById('pingStatus').innerText = '🔴 Network Error';
         document.getElementById('pingStatus').style.color = '#f85149';
         appendAiLog(`❌ [Ping Error] Network fail: ${err.message}`);
       } finally {
         btn.disabled = false;
-        btn.innerText = "⚡ Проверить модель подробнее (Пинг & Соединение)";
+        btn.innerText = "⚡ Test Model Connection & Ping";
       }
     }
 
@@ -912,6 +912,7 @@
       const provider = document.getElementById('providerSelect').value;
       
       const aiModel = document.getElementById('aiModelSelect').value;
+      const customModelName = document.getElementById('aiCustomModelName').value;
       const aiApiKey = document.getElementById('aiApiKey').value;
       const aiBaseUrl = document.getElementById('aiBaseUrl').value;
       const aiCustomPrompt = document.getElementById('aiCustomPrompt').value;
@@ -923,19 +924,19 @@
       const selectedLangs = Array.from(document.querySelectorAll('.lang-item input:checked')).map(c => c.value);
 
       if (!selectedLangs.length) {
-        alert("Выберите языки для перевода");
+        alert("Please select target languages for translation");
         return;
       }
 
       btn.disabled = true;
-      btn.innerText = "Выполняется...";
+      btn.innerText = "Processing...";
       bar.style.width = '15%';
 
       appendLog(`\n[job] Starting translation for: ${selectedLangs.join(', ')}`, 'log-info');
       appendLog(`[job] Input: ${inputFile} | Provider: ${provider.toUpperCase()} | Workers: ${workers}`);
 
       if (provider === 'ai') {
-        appendAiLog(`\n🤖 [AI Session] Model: ${aiModel} | Endpoint: ${aiBaseUrl} | Temp: ${aiTemp} | TopP: ${aiTopP} | MaxTokens: ${aiMaxTokens} | Reasoning: ${aiReasoning}`);
+        appendAiLog(`\n🤖 [AI Session] Model: ${customModelName || aiModel} | Endpoint: ${aiBaseUrl} | Temp: ${aiTemp} | TopP: ${aiTopP} | MaxTokens: ${aiMaxTokens} | Reasoning: ${aiReasoning}`);
       }
 
       try {
@@ -949,6 +950,7 @@
             workers: workers,
             provider: provider,
             ai_model: aiModel,
+            custom_model_name: customModelName,
             api_key: aiApiKey,
             base_url: aiBaseUrl,
             custom_prompt: aiCustomPrompt,
@@ -981,7 +983,7 @@
         appendLog(`[error] Network failure: ${err.message}`, 'log-error');
       } finally {
         btn.disabled = false;
-        btn.innerText = "Запустить перевод";
+        btn.innerText = "Start Translation";
       }
     }
 
