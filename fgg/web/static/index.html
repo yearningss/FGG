@@ -154,6 +154,30 @@
       background: rgba(13, 17, 23, 0.9);
     }
 
+    /* DIAGNOSTIC PING RESULTS BOX */
+    .ping-result-box {
+      display: none;
+      background: #090c10;
+      border: 1px solid rgba(88, 166, 255, 0.3);
+      border-radius: 6px;
+      padding: 10px;
+      margin-top: 10px;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", monospace;
+      font-size: 11px;
+      color: var(--text);
+    }
+
+    .ping-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .ping-val {
+      font-weight: 600;
+      color: var(--blue);
+    }
+
     .category-group {
       margin-bottom: 10px;
     }
@@ -223,11 +247,29 @@
       transition: background 0.15s ease;
     }
 
+    .btn-secondary {
+      width: 100%;
+      background: rgba(188, 140, 255, 0.15);
+      color: var(--purple);
+      border: 1px solid rgba(188, 140, 255, 0.4);
+      border-radius: 6px;
+      padding: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: background 0.15s ease;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(188, 140, 255, 0.25);
+    }
+
     .btn-primary:hover {
       background: var(--accent-hover);
     }
 
-    .btn-primary:disabled {
+    .btn-primary:disabled, .btn-secondary:disabled {
       opacity: 0.6;
       cursor: not-allowed;
     }
@@ -285,7 +327,7 @@
   <header>
     <div class="brand">
       FGG Fast Global Translator
-      <span class="brand-tag">v2.0 (Auto Base URL Enabled)</span>
+      <span class="brand-tag">v2.0 (AI Latency & Ping Diagnostics)</span>
     </div>
   </header>
 
@@ -311,12 +353,12 @@
             <label>Движок перевода</label>
             <select id="providerSelect" onchange="onProviderChange(this.value)">
               <option value="google">Google Translate (Бесплатно & Быстро)</option>
-              <option value="ai">🤖 AI / LLM Engine (Автоматический Base URL)</option>
+              <option value="ai">🤖 AI / LLM Engine (Пинг & Подробная проверка)</option>
               <option value="mock">Mock Engine (Тестовый режим)</option>
             </select>
           </div>
 
-          <!-- GRANULAR AI CONFIG & INSTANT MODEL SEARCH -->
+          <!-- GRANULAR AI CONFIG & DIAGNOSTIC PING -->
           <div class="ai-panel" id="aiConfigPanel">
             <div class="ai-panel-title">🤖 Поиск & Настройка Модели ИИ</div>
 
@@ -327,8 +369,7 @@
 
             <div class="field">
               <label>Выбранная модель ИИ (<span id="modelCountLabel">100+ доступно</span>)</label>
-              <select id="aiModelSelect" size="6" style="height:140px;" onchange="onAiModelChange(this.value)">
-                
+              <select id="aiModelSelect" size="6" style="height:130px;" onchange="onAiModelChange(this.value)">
                 <optgroup label="OpenAI">
                   <option value="gpt-5">GPT-5</option>
                   <option value="gpt-5-thinking">GPT-5 Thinking</option>
@@ -534,13 +575,25 @@
               </select>
             </div>
 
-            <div class="field">
+            <!-- BUTTON: TEST MODEL PING & CONNECTION -->
+            <button class="btn-secondary" id="pingBtn" onclick="pingAiModel()">⚡ Проверить модель подробнее (Пинг & Соединение)</button>
+
+            <!-- DIAGNOSTIC PING RESULTS -->
+            <div class="ping-result-box" id="pingResultBox">
+              <div class="ping-row"><span>Статус ответа:</span><span class="ping-val" id="pingStatus">-</span></div>
+              <div class="ping-row"><span>Пинг до сервера:</span><span class="ping-val" id="pingMs">-</span></div>
+              <div class="ping-row"><span>HTTP Код:</span><span class="ping-val" id="pingHttp">-</span></div>
+              <div class="ping-row"><span>Модель ID:</span><span class="ping-val" id="pingModelId">-</span></div>
+              <div class="ping-row"><span>Эндпоинт:</span><span class="ping-val" id="pingEndpoint" style="font-size:10px;">-</span></div>
+            </div>
+
+            <div class="field" style="margin-top:10px;">
               <label>API Ключ (Для локального Ollama можно оставить пустым)</label>
               <input type="password" id="aiApiKey" placeholder="sk-...">
             </div>
 
             <div class="field">
-              <label>Base URL Endpoint (Автоматически подставляется официальный URL, можно изменить)</label>
+              <label>Base URL Endpoint (Автоматически подставляется)</label>
               <input type="text" id="aiBaseUrl" value="https://api.openai.com/v1">
             </div>
 
@@ -682,7 +735,6 @@
   </div>
 
   <script>
-    // Official Default Endpoints Mapping
     const DEFAULT_BASE_URLS = {
       'gpt': 'https://api.openai.com/v1',
       'o1': 'https://api.openai.com/v1',
@@ -766,6 +818,57 @@
       }
 
       baseUrlInput.value = matchedUrl;
+    }
+
+    async function pingAiModel() {
+      const btn = document.getElementById('pingBtn');
+      const pingBox = document.getElementById('pingResultBox');
+      
+      const aiModel = document.getElementById('aiModelSelect').value;
+      const aiApiKey = document.getElementById('aiApiKey').value;
+      const aiBaseUrl = document.getElementById('aiBaseUrl').value;
+
+      btn.disabled = true;
+      btn.innerText = "⏳ Выполняется пинг...";
+      pingBox.style.display = 'block';
+
+      document.getElementById('pingStatus').innerText = 'Тестирование...';
+      document.getElementById('pingMs').innerText = '...';
+      document.getElementById('pingHttp').innerText = '...';
+      document.getElementById('pingModelId').innerText = aiModel;
+      document.getElementById('pingEndpoint').innerText = aiBaseUrl;
+
+      try {
+        const res = await fetch('/api/ping_ai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ai_model: aiModel,
+            api_key: aiApiKey,
+            base_url: aiBaseUrl
+          })
+        });
+
+        const data = await res.json();
+        document.getElementById('pingStatus').innerText = data.status || (data.success ? '🟢 Успешно' : '🔴 Ошибка');
+        document.getElementById('pingStatus').style.color = data.success ? '#56d364' : '#f85149';
+        document.getElementById('pingMs').innerText = `${data.ping_ms} ms`;
+        document.getElementById('pingHttp').innerText = data.status_code ? `${data.status_code}` : 'N/A';
+        document.getElementById('pingModelId').innerText = data.model_id || aiModel;
+        document.getElementById('pingEndpoint').innerText = data.endpoint || aiBaseUrl;
+
+        appendAiLog(`📡 [Ping Test] Model: ${aiModel} | Status: ${data.status} | Latency: ${data.ping_ms}ms | HTTP: ${data.status_code}`);
+        if (data.error) {
+          appendAiLog(`❌ [Ping Details] ${data.error}`);
+        }
+      } catch (err) {
+        document.getElementById('pingStatus').innerText = '🔴 Сетевая ошибка';
+        document.getElementById('pingStatus').style.color = '#f85149';
+        appendAiLog(`❌ [Ping Error] Network fail: ${err.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "⚡ Проверить модель подробнее (Пинг & Соединение)";
+      }
     }
 
     function toggleLangs(state) {

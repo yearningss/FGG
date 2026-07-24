@@ -1,6 +1,7 @@
 """
 FGG Standalone Web Server & REST API.
 Provides an interactive web dashboard for non-technical users and game localizers.
+Includes AI Model Ping & Latency Diagnostic Benchmark endpoint (/api/ping_ai).
 """
 
 from __future__ import annotations
@@ -8,10 +9,13 @@ from __future__ import annotations
 import json
 import os
 import sys
+import time
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 from typing import Any, Dict, List
 import urllib.parse
+import urllib.request
+import urllib.error
 
 # Ensure UTF-8 output on Windows console
 if hasattr(sys.stdout, "reconfigure"):
@@ -23,7 +27,7 @@ if hasattr(sys.stdout, "reconfigure"):
 from fgg.core.engine import TranslationEngine
 from fgg.providers.google_provider import GoogleProvider
 from fgg.providers.mock_provider import MockProvider
-from fgg.providers.ai_provider import UnifiedAITranslator
+from fgg.providers.ai_provider import UnifiedAITranslator, AI_MODELS
 
 WEB_DIR = Path(__file__).parent
 STATIC_DIR = WEB_DIR / "static"
@@ -57,15 +61,107 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
         except Exception:
             payload = {}
 
-        if parsed_url.path == "/api/translate":
+        if parsed_url.path == "/api/ping_ai":
+            # Diagnostic AI Ping & Connection Benchmark
+            model_key = payload.get("ai_model", "gpt-4o-mini")
+            api_key = payload.get("api_key", "")
+            base_url = payload.get("base_url", "")
+
+            preset = AI_MODELS.get(model_key, AI_MODELS.get("gpt-4o-mini", AI_MODELS["custom"]))
+            actual_model = preset["model"]
+            target_url = (base_url or preset["base_url"]).rstrip("/")
+            provider_type = preset["provider"]
+
+            start_t = time.time()
+            http_code = 0
+            ping_ms = 0
+            model_confirmed = ""
+            error_msg = ""
+
+            try:
+                # Prepare a lightweight test request
+                if provider_type == "anthropic":
+                    req_url = f"{target_url}/messages"
+                    data = json.dumps({
+                        "model": actual_model,
+                        "max_tokens": 5,
+                        "messages": [{"role": "user", "content": "ping"}]
+                    }).encode("utf-8")
+                    headers = {
+                        "Content-Type": "application/json",
+                        "x-api-key": api_key,
+                        "anthropic-version": "2023-06-01"
+                    }
+                elif provider_type == "gemini":
+                    req_url = f"{target_url}/models/{actual_model}:generateContent?key={api_key}"
+                    data = json.dumps({
+                        "contents": [{"parts": [{"text": "ping"}]}],
+                        "generationConfig": {"maxOutputTokens": 5}
+                    }).encode("utf-8")
+                    headers = {"Content-Type": "application/json"}
+                else:
+                    req_url = f"{target_url}/chat/completions"
+                    data = json.dumps({
+                        "model": actual_model,
+                        "messages": [{"role": "user", "content": "ping"}],
+                        "max_tokens": 5
+                    }).encode("utf-8")
+                    headers = {
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bearer {api_key or 'ollama'}"
+                    }
+
+                req = urllib.request.Request(req_url, data=data, headers=headers)
+                t0 = time.time()
+                with urllib.request.urlopen(req, timeout=12) as resp:
+                    ping_ms = int((time.time() - t0) * 1000)
+                    http_code = resp.status
+                    res_body = json.loads(resp.read().decode("utf-8"))
+                    model_confirmed = res_body.get("model", actual_model)
+
+                self._send_json({
+                    "success": True,
+                    "model_key": model_key,
+                    "model_name": preset["name"],
+                    "model_id": model_confirmed,
+                    "ping_ms": ping_ms,
+                    "status_code": http_code,
+                    "endpoint": target_url,
+                    "status": "🟢 Модель активна и доступна"
+                })
+            except urllib.error.HTTPError as he:
+                ping_ms = int((time.time() - start_t) * 1000)
+                error_body = he.read().decode("utf-8", errors="ignore")[:200]
+                self._send_json({
+                    "success": False,
+                    "model_key": model_key,
+                    "ping_ms": ping_ms,
+                    "status_code": he.code,
+                    "endpoint": target_url,
+                    "error": f"HTTP {he.code}: {he.reason}",
+                    "details": error_body,
+                    "status": "🔴 Ошибка ответа сервера"
+                })
+            except Exception as exc:
+                ping_ms = int((time.time() - start_t) * 1000)
+                self._send_json({
+                    "success": False,
+                    "model_key": model_key,
+                    "ping_ms": ping_ms,
+                    "status_code": 0,
+                    "endpoint": target_url,
+                    "error": str(exc),
+                    "status": "🔴 Не удалось подключиться к серверу"
+                })
+
+        elif parsed_url.path == "/api/translate":
             input_file = payload.get("input_file") or str(PROJECT_ROOT / "оригинал" / "rus.txt")
             output_dir = payload.get("output_dir") or str(PROJECT_ROOT / "переводы")
             langs = payload.get("langs", ["en"])
             workers = payload.get("workers", 5)
             provider_type = payload.get("provider", "google")
             
-            # AI & Fine-Tuning options
-            ai_model = payload.get("ai_model", "openai-gpt4o-mini")
+            ai_model = payload.get("ai_model", "gpt-4o-mini")
             api_key = payload.get("api_key", "")
             base_url = payload.get("base_url", "")
             custom_prompt = payload.get("custom_prompt", "")
@@ -88,7 +184,6 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
             def _ai_log_cb(msg: str):
                 ai_logs.append(msg)
 
-            # Select Provider
             if provider_type == "ai":
                 provider = UnifiedAITranslator(
                     model_key=ai_model,
