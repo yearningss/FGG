@@ -27,7 +27,7 @@ if hasattr(sys.stdout, "reconfigure"):
 from fgg.core.engine import TranslationEngine
 from fgg.providers.google_provider import GoogleProvider
 from fgg.providers.mock_provider import MockProvider
-from fgg.providers.ai_provider import UnifiedAITranslator, AI_MODELS
+from fgg.providers.ai_provider import UnifiedAITranslator, AI_MODELS, normalize_base_url
 
 WEB_DIR = Path(__file__).parent
 STATIC_DIR = WEB_DIR / "static"
@@ -62,74 +62,81 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
             payload = {}
 
         if parsed_url.path == "/api/ping_ai":
-            # Diagnostic AI Ping & Connection Benchmark
             model_key = payload.get("ai_model", "gpt-4o-mini")
             api_key = payload.get("api_key", "")
-            base_url = payload.get("base_url", "")
+            raw_base_url = payload.get("base_url", "")
 
             preset = AI_MODELS.get(model_key, AI_MODELS.get("gpt-4o-mini", AI_MODELS["custom"]))
             actual_model = preset["model"]
-            target_url = (base_url or preset["base_url"]).rstrip("/")
+            preset_base_url = preset["base_url"]
             provider_type = preset["provider"]
 
-            start_t = time.time()
-            http_code = 0
-            ping_ms = 0
-            model_confirmed = ""
-            error_msg = ""
+            is_custom_router = bool(raw_base_url and raw_base_url.rstrip("/") != preset_base_url.rstrip("/"))
+            effective_provider = "openai" if is_custom_router else provider_type
+            target_url = normalize_base_url(raw_base_url or preset_base_url, is_openai_compatible=(effective_provider == "openai"))
 
-            try:
-                # Prepare a lightweight test request
-                if provider_type == "anthropic":
-                    req_url = f"{target_url}/messages"
-                    data = json.dumps({
-                        "model": actual_model,
-                        "max_tokens": 5,
-                        "messages": [{"role": "user", "content": "ping"}]
-                    }).encode("utf-8")
-                    headers = {
-                        "Content-Type": "application/json",
-                        "x-api-key": api_key,
-                        "anthropic-version": "2023-06-01"
-                    }
-                elif provider_type == "gemini":
-                    req_url = f"{target_url}/models/{actual_model}:generateContent?key={api_key}"
-                    data = json.dumps({
-                        "contents": [{"parts": [{"text": "ping"}]}],
-                        "generationConfig": {"maxOutputTokens": 5}
-                    }).encode("utf-8")
+            start_t = time.time()
+            ping_ms = 0
+
+            # Try request with primary format, fallback to OpenAI if router fails
+            def _try_request(url: str, is_openai: bool, is_anthropic: bool, is_gemini: bool):
+                if is_anthropic:
+                    req_url = f"{url}/messages"
+                    data = json.dumps({"model": actual_model, "max_tokens": 5, "messages": [{"role": "user", "content": "ping"}]}).encode("utf-8")
+                    headers = {"Content-Type": "application/json", "x-api-key": api_key, "anthropic-version": "2023-06-01"}
+                elif is_gemini:
+                    req_url = f"{url}/models/{actual_model}:generateContent?key={api_key}"
+                    data = json.dumps({"contents": [{"parts": [{"text": "ping"}]}], "generationConfig": {"maxOutputTokens": 5}}).encode("utf-8")
                     headers = {"Content-Type": "application/json"}
                 else:
-                    req_url = f"{target_url}/chat/completions"
-                    data = json.dumps({
-                        "model": actual_model,
-                        "messages": [{"role": "user", "content": "ping"}],
-                        "max_tokens": 5
-                    }).encode("utf-8")
-                    headers = {
-                        "Content-Type": "application/json",
-                        "Authorization": f"Bearer {api_key or 'ollama'}"
-                    }
+                    req_url = f"{url}/chat/completions"
+                    data = json.dumps({"model": actual_model, "messages": [{"role": "user", "content": "ping"}], "max_tokens": 5}).encode("utf-8")
+                    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key or 'ollama'}"}
 
                 req = urllib.request.Request(req_url, data=data, headers=headers)
                 t0 = time.time()
-                with urllib.request.urlopen(req, timeout=12) as resp:
-                    ping_ms = int((time.time() - t0) * 1000)
-                    http_code = resp.status
-                    res_body = json.loads(resp.read().decode("utf-8"))
-                    model_confirmed = res_body.get("model", actual_model)
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    p_ms = int((time.time() - t0) * 1000)
+                    r_body = json.loads(resp.read().decode("utf-8"))
+                    m_id = r_body.get("model", actual_model)
+                    return resp.status, p_ms, m_id, req_url
 
+            try:
+                is_a = (effective_provider == "anthropic")
+                is_g = (effective_provider == "gemini")
+                is_o = (effective_provider == "openai")
+                
+                status_code, ping_ms, model_id, final_url = _try_request(target_url, is_o, is_a, is_g)
                 self._send_json({
                     "success": True,
                     "model_key": model_key,
                     "model_name": preset["name"],
-                    "model_id": model_confirmed,
+                    "model_id": model_id,
                     "ping_ms": ping_ms,
-                    "status_code": http_code,
-                    "endpoint": target_url,
+                    "status_code": status_code,
+                    "endpoint": final_url,
                     "status": "🟢 Модель активна и доступна"
                 })
             except urllib.error.HTTPError as he:
+                # If custom endpoint failed native format, fallback to OpenAI chat completions endpoint
+                if (effective_provider != "openai"):
+                    try:
+                        fallback_url = normalize_base_url(raw_base_url or preset_base_url, is_openai_compatible=True)
+                        status_code, ping_ms, model_id, final_url = _try_request(fallback_url, True, False, False)
+                        self._send_json({
+                            "success": True,
+                            "model_key": model_key,
+                            "model_name": preset["name"],
+                            "model_id": model_id,
+                            "ping_ms": ping_ms,
+                            "status_code": status_code,
+                            "endpoint": final_url,
+                            "status": "🟢 Модель доступна (через OpenAI-совместимый прокси)"
+                        })
+                        return
+                    except Exception:
+                        pass
+
                 ping_ms = int((time.time() - start_t) * 1000)
                 error_body = he.read().decode("utf-8", errors="ignore")[:200]
                 self._send_json({
@@ -140,7 +147,7 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
                     "endpoint": target_url,
                     "error": f"HTTP {he.code}: {he.reason}",
                     "details": error_body,
-                    "status": "🔴 Ошибка ответа сервера"
+                    "status": f"🔴 Ошибка сервера ({he.code})"
                 })
             except Exception as exc:
                 ping_ms = int((time.time() - start_t) * 1000)

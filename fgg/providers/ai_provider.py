@@ -1,7 +1,7 @@
 """
 Unified Multi-Model AI Translation Engine for FGG 2.0.
 Supports all major AI model providers, reasoning engines, local LLMs, and API routers.
-Includes granular fine-tuning parameters and real-time AI reasoning & stream logs.
+Includes auto-routing for custom endpoints like agentrouter.org, OpenRouter, and Ollama.
 """
 
 from __future__ import annotations
@@ -24,6 +24,13 @@ STRICT GAME LOCALIZATION RULES:
 Example Input: ["Привет, [J]! {clr:red}Опасность{clr/}"]
 Example Output: ["Hello, [J]! {clr:red}Danger{clr/}"]
 """
+
+def normalize_base_url(url: str, is_openai_compatible: bool = True) -> str:
+    url = url.rstrip("/")
+    if is_openai_compatible and not url.endswith("/v1") and not url.endswith("/v1beta") and not url.endswith("/v2"):
+        if "anthropic.com" not in url and "generativelanguage.googleapis.com" not in url:
+            url = f"{url}/v1"
+    return url
 
 # Ultimate AI Model Catalog
 AI_MODELS: Dict[str, Dict[str, str]] = {
@@ -238,11 +245,15 @@ class UnifiedAITranslator(BaseTranslator):
     ) -> None:
         super().__init__(source_lang=source_lang, max_retries=max_retries)
         self.preset = AI_MODELS.get(model_key, AI_MODELS.get("gpt-4o-mini", AI_MODELS["custom"]))
-        self.provider_type = self.preset["provider"]
-        self.model = custom_model_name or self.preset["model"]
-        self.base_url = (base_url or self.preset["base_url"]).rstrip("/")
+        self.raw_base_url = base_url or self.preset["base_url"]
         self.api_key = api_key or os.environ.get("AI_API_KEY") or os.environ.get("OPENAI_API_KEY", "")
         self.custom_prompt = custom_prompt
+        self.model = custom_model_name or self.preset["model"]
+
+        # Check if user is using a custom router/proxy (like agentrouter, openrouter, custom endpoint)
+        self.is_custom_router = bool(base_url and base_url.rstrip("/") != self.preset["base_url"].rstrip("/"))
+        self.provider_type = "openai" if self.is_custom_router else self.preset["provider"]
+        self.base_url = normalize_base_url(self.raw_base_url, is_openai_compatible=(self.provider_type == "openai"))
 
         self.temperature = float(temperature)
         self.top_p = float(top_p)
@@ -266,7 +277,7 @@ class UnifiedAITranslator(BaseTranslator):
         )
 
         self._log(
-            f"🤖 [AI Query] Model: '{self.model}' | Lang: '{target_lang}' | "
+            f"🤖 [AI Query] Model: '{self.model}' | Endpoint: '{self.base_url}' | "
             f"Temp: {self.temperature} | TopP: {self.top_p} | MaxTokens: {self.max_tokens}"
         )
 
@@ -388,6 +399,32 @@ class UnifiedAITranslator(BaseTranslator):
                         self._log(f"⚠️ [AI Warning] Length mismatch! Expected {len(original_texts)}, got {len(parsed_array)}.")
                         return parsed_array[:len(original_texts)] + [None] * (len(original_texts) - len(parsed_array))
 
+            except urllib.error.HTTPError as he:
+                self._log(f"❌ [AI HTTP Error {he.code}] {he.reason}")
+                # If custom router failed on Anthropic/Gemini path, fallback to OpenAI chat completions
+                if is_anthropic or is_gemini:
+                    self._log("🔄 Attempting OpenAI-compatible proxy fallback (/v1/chat/completions)...")
+                    fallback_url = normalize_base_url(self.raw_base_url) + "/chat/completions"
+                    fb_payload = {
+                        "model": self.model,
+                        "messages": [{"role": "user", "content": f"{payload.get('system', '')}\n\n{json.dumps(original_texts, ensure_ascii=False)}"}],
+                        "temperature": self.temperature
+                    }
+                    fb_req = urllib.request.Request(
+                        fallback_url,
+                        data=json.dumps(fb_payload).encode("utf-8"),
+                        headers={"Content-Type": "application/json", "Authorization": f"Bearer {self.api_key}"}
+                    )
+                    try:
+                        with urllib.request.urlopen(fb_req, timeout=60) as fb_resp:
+                            fb_json = json.loads(fb_resp.read().decode("utf-8"))
+                            fb_text = fb_json["choices"][0]["message"]["content"]
+                            return self._parse_json_result(fb_text) or [None] * len(original_texts)
+                    except Exception as fb_exc:
+                        self._log(f"❌ [Fallback Error] {fb_exc}")
+
+                if attempt < self.max_retries:
+                    time.sleep(self.retry_delay * attempt)
             except Exception as exc:
                 self._log(f"❌ [AI Retry {attempt}/{self.max_retries}] Exception: {str(exc)[:150]}")
                 if attempt < self.max_retries:
