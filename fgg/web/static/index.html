@@ -60,14 +60,14 @@
     }
 
     .container {
-      max-width: 1200px;
+      max-width: 1240px;
       margin: 24px auto;
       padding: 0 16px;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: 440px 1fr;
+      grid-template-columns: 480px 1fr;
       gap: 20px;
     }
 
@@ -105,7 +105,7 @@
       margin-bottom: 4px;
     }
 
-    input[type="text"], input[type="password"], select, textarea {
+    input[type="text"], input[type="password"], input[type="number"], select, textarea {
       width: 100%;
       background: var(--bg);
       border: 1px solid var(--border);
@@ -121,7 +121,7 @@
       border-color: var(--border-focus);
     }
 
-    /* AI CONFIG SUBPANEL */
+    /* AI CONFIG & FINE TUNING SUBPANEL */
     .ai-panel {
       display: none;
       background: rgba(188, 140, 255, 0.05);
@@ -137,6 +137,12 @@
       color: var(--purple);
       margin-bottom: 8px;
       text-transform: uppercase;
+    }
+
+    .tuning-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
     }
 
     /* CATEGORIZED LANGUAGES */
@@ -155,7 +161,7 @@
     }
 
     .lang-container {
-      max-height: 200px;
+      max-height: 180px;
       overflow-y: auto;
       background: var(--bg);
       border: 1px solid var(--border);
@@ -241,13 +247,12 @@
       padding: 10px;
       font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", monospace;
       font-size: 12px;
-      height: 240px;
+      height: 250px;
       overflow-y: auto;
       white-space: pre-wrap;
       color: var(--text);
     }
 
-    /* DEDICATED AI STREAM LOG */
     .ai-log-box {
       background: #090c10;
       border: 1px solid rgba(188, 140, 255, 0.3);
@@ -255,7 +260,7 @@
       padding: 10px;
       font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", monospace;
       font-size: 11px;
-      height: 220px;
+      height: 250px;
       overflow-y: auto;
       white-space: pre-wrap;
       color: var(--purple);
@@ -273,7 +278,7 @@
   <header>
     <div class="brand">
       FGG Fast Global Translator
-      <span class="brand-tag">v2.0 (AI Multi-Model Enabled)</span>
+      <span class="brand-tag">v2.0 (Granular AI Fine-Tuning)</span>
     </div>
   </header>
 
@@ -299,28 +304,48 @@
             <label>Движок перевода</label>
             <select id="providerSelect" onchange="onProviderChange(this.value)">
               <option value="google">Google Translate (Бесплатно & Быстро)</option>
-              <option value="ai">🤖 AI / LLM Engine (GPT-4o, Claude, Gemini, DeepSeek, Ollama)</option>
+              <option value="ai">🤖 AI / LLM Engine (Все модели ИИ + Тонкая настройка)</option>
               <option value="mock">Mock Engine (Тестовый режим)</option>
             </select>
           </div>
 
-          <!-- DYNAMIC AI CONFIG PANEL -->
+          <!-- GRANULAR AI CONFIG & FINE-TUNING PANEL -->
           <div class="ai-panel" id="aiConfigPanel">
-            <div class="ai-panel-title">🤖 Настройки ИИ-Модели</div>
+            <div class="ai-panel-title">🤖 Модель и Точечная Настройка ИИ</div>
 
             <div class="field">
               <label>Модель ИИ</label>
               <select id="aiModelSelect" onchange="onAiModelChange(this.value)">
-                <option value="openai-gpt4o">OpenAI GPT-4o</option>
-                <option value="openai-gpt4o-mini" selected>OpenAI GPT-4o mini</option>
-                <option value="anthropic-claude-35-sonnet">Anthropic Claude 3.5 Sonnet</option>
-                <option value="anthropic-claude-3-haiku">Anthropic Claude 3 Haiku</option>
-                <option value="gemini-15-pro">Google Gemini 1.5 Pro</option>
-                <option value="gemini-15-flash">Google Gemini 1.5 Flash</option>
-                <option value="deepseek-v3">DeepSeek V3</option>
-                <option value="deepseek-r1">DeepSeek R1 (Reasoning)</option>
-                <option value="local-ollama">Local Ollama / vLLM (localhost:11434)</option>
-                <option value="openrouter">OpenRouter (All Models)</option>
+                <optgroup label="OpenAI">
+                  <option value="openai-gpt4o">OpenAI GPT-4o</option>
+                  <option value="openai-gpt4o-mini" selected>OpenAI GPT-4o mini</option>
+                  <option value="openai-o3-mini">OpenAI o3-mini (Reasoning)</option>
+                  <option value="openai-o1-mini">OpenAI o1-mini</option>
+                  <option value="openai-gpt4-turbo">OpenAI GPT-4 Turbo</option>
+                </optgroup>
+                <optgroup label="Anthropic Claude">
+                  <option value="anthropic-claude-35-sonnet">Claude 3.5 Sonnet</option>
+                  <option value="anthropic-claude-35-haiku">Claude 3.5 Haiku</option>
+                  <option value="anthropic-claude-3-opus">Claude 3 Opus</option>
+                </optgroup>
+                <optgroup label="Google Gemini">
+                  <option value="gemini-20-flash-exp">Gemini 2.0 Flash (Exp)</option>
+                  <option value="gemini-20-thinking">Gemini 2.0 Thinking (Reasoning)</option>
+                  <option value="gemini-15-pro">Gemini 1.5 Pro</option>
+                  <option value="gemini-15-flash">Gemini 1.5 Flash</option>
+                </optgroup>
+                <optgroup label="DeepSeek">
+                  <option value="deepseek-v3">DeepSeek V3 (Chat)</option>
+                  <option value="deepseek-r1">DeepSeek R1 (Reasoning)</option>
+                </optgroup>
+                <optgroup label="Open-Source & Local">
+                  <option value="meta-llama-33-70b">Meta Llama 3.3 70B</option>
+                  <option value="qwen-25-72b">Qwen 2.5 72B Instruct</option>
+                  <option value="mistral-large">Mistral Large 2</option>
+                  <option value="local-ollama">Local Ollama / vLLM (localhost:11434)</option>
+                  <option value="openrouter">OpenRouter (Any Model)</option>
+                  <option value="custom">Custom Endpoint / Model</option>
+                </optgroup>
               </select>
             </div>
 
@@ -330,13 +355,50 @@
             </div>
 
             <div class="field">
-              <label>Custom Base URL (Опционально)</label>
+              <label>Custom Base URL Endpoint (Опционально)</label>
               <input type="text" id="aiBaseUrl" placeholder="https://api.openai.com/v1">
             </div>
 
             <div class="field">
-              <label>Игровой контекст / Промпт</label>
+              <label>Игровой контекст / Системный промпт</label>
               <textarea id="aiCustomPrompt" rows="2" placeholder="Особенности жанра, стиль текста (RPG, хулиганский сленг, фэнтези)"></textarea>
+            </div>
+
+            <!-- FINE-TUNING SLIDERS & CONTROLS -->
+            <div style="font-size:11px; font-weight:600; color:var(--purple); margin:10px 0 6px 0; text-transform:uppercase;">
+              🎛️ Точечные параметры гиперпараметров
+            </div>
+
+            <div class="tuning-grid">
+              <div class="field">
+                <label>Temperature: <span id="tempVal" style="color:var(--text-bold)">0.2</span></label>
+                <input type="range" id="aiTemp" min="0.0" max="1.5" step="0.05" value="0.2" style="width:100%; accent-color:var(--purple);" oninput="document.getElementById('tempVal').innerText = this.value">
+              </div>
+
+              <div class="field">
+                <label>Top P: <span id="topPVal" style="color:var(--text-bold)">1.0</span></label>
+                <input type="range" id="aiTopP" min="0.0" max="1.0" step="0.05" value="1.0" style="width:100%; accent-color:var(--purple);" oninput="document.getElementById('topPVal').innerText = this.value">
+              </div>
+            </div>
+
+            <div class="tuning-grid">
+              <div class="field">
+                <label>Max Output Tokens</label>
+                <select id="aiMaxTokens">
+                  <option value="2048">2048 tokens</option>
+                  <option value="4096" selected>4096 tokens</option>
+                  <option value="8192">8192 tokens</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label>Reasoning Effort (o3/R1)</label>
+                <select id="aiReasoning">
+                  <option value="low">Low (Fast)</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="high">High (Deep)</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -355,7 +417,6 @@
             </div>
             
             <div class="lang-container">
-              <!-- 🔤 Латиница -->
               <div class="category-group">
                 <div class="category-title">🔤 Латиница (Европа & Мир)</div>
                 <div class="lang-grid">
@@ -370,7 +431,6 @@
                 </div>
               </div>
 
-              <!-- ⛩️ Иероглифы & Азия -->
               <div class="category-group">
                 <div class="category-title">⛩️ Иероглифы & Азия</div>
                 <div class="lang-grid">
@@ -383,7 +443,6 @@
                 </div>
               </div>
 
-              <!-- 🪆 Кириллица -->
               <div class="category-group">
                 <div class="category-title">🪆 Кириллица</div>
                 <div class="lang-grid">
@@ -394,9 +453,8 @@
                 </div>
               </div>
 
-              <!-- 🌙 Арабское письмо -->
               <div class="category-group">
-                <div class="category-title">🌙 Арабское письмо & Вязь</div>
+                <div class="category-title">🌙 Арабское письмо</div>
                 <div class="lang-grid">
                   <label class="lang-item"><input type="checkbox" value="ar"> العربية (ar)</label>
                   <label class="lang-item"><input type="checkbox" value="fa"> فارسی (fa)</label>
@@ -412,7 +470,6 @@
 
       <!-- RIGHT PANEL -->
       <div>
-        <!-- SYSTEM LOG -->
         <div class="panel">
           <div class="panel-title">Системный лог вывода</div>
 
@@ -425,7 +482,6 @@
           </div>
         </div>
 
-        <!-- DEDICATED AI THOUGHT & STREAM LOG -->
         <div class="panel">
           <div class="panel-title">
             🧠 Лог мыслей & сырых ответов ИИ
@@ -452,6 +508,8 @@
       if (modelKey === 'local-ollama') {
         baseUrlInput.value = 'http://localhost:11434/v1';
       } else if (modelKey === 'openrouter') {
+        baseUrlInput.value = 'https://openrouter.ai/api/v1';
+      } else if (modelKey.startsWith('meta-llama') || modelKey.startsWith('qwen')) {
         baseUrlInput.value = 'https://openrouter.ai/api/v1';
       } else {
         baseUrlInput.value = '';
@@ -489,11 +547,15 @@
       const workers = parseInt(document.getElementById('workers').value);
       const provider = document.getElementById('providerSelect').value;
       
-      // AI Parameters
+      // Fine-Tuning Parameters
       const aiModel = document.getElementById('aiModelSelect').value;
       const aiApiKey = document.getElementById('aiApiKey').value;
       const aiBaseUrl = document.getElementById('aiBaseUrl').value;
       const aiCustomPrompt = document.getElementById('aiCustomPrompt').value;
+      const aiTemp = parseFloat(document.getElementById('aiTemp').value);
+      const aiTopP = parseFloat(document.getElementById('aiTopP').value);
+      const aiMaxTokens = parseInt(document.getElementById('aiMaxTokens').value);
+      const aiReasoning = document.getElementById('aiReasoning').value;
 
       const selectedLangs = Array.from(document.querySelectorAll('.lang-item input:checked')).map(c => c.value);
 
@@ -510,7 +572,7 @@
       appendLog(`[job] Input: ${inputFile} | Provider: ${provider.toUpperCase()} | Workers: ${workers}`);
 
       if (provider === 'ai') {
-        appendAiLog(`\n🤖 [AI Engine Started] Model: ${aiModel} | Endpoint: ${aiBaseUrl || 'default'}`);
+        appendAiLog(`\n🤖 [AI Fine-Tuned Session] Model: ${aiModel} | Temp: ${aiTemp} | TopP: ${aiTopP} | MaxTokens: ${aiMaxTokens} | Reasoning: ${aiReasoning}`);
       }
 
       try {
@@ -527,6 +589,10 @@
             api_key: aiApiKey,
             base_url: aiBaseUrl,
             custom_prompt: aiCustomPrompt,
+            temperature: aiTemp,
+            top_p: aiTopP,
+            max_tokens: aiMaxTokens,
+            reasoning_effort: aiReasoning,
             mock: provider === 'mock'
           })
         });
@@ -540,7 +606,6 @@
             appendLog(`     Output: ${r.output_file}`);
           });
 
-          // Display AI stream & reasoning logs
           if (data.ai_logs && data.ai_logs.length) {
             data.ai_logs.forEach(logLine => appendAiLog(logLine));
           }

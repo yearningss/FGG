@@ -64,11 +64,17 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
             workers = payload.get("workers", 5)
             provider_type = payload.get("provider", "google")
             
-            # AI options
+            # AI & Fine-Tuning options
             ai_model = payload.get("ai_model", "openai-gpt4o-mini")
             api_key = payload.get("api_key", "")
             base_url = payload.get("base_url", "")
             custom_prompt = payload.get("custom_prompt", "")
+            temperature = float(payload.get("temperature", 0.2))
+            top_p = float(payload.get("top_p", 1.0))
+            max_tokens = int(payload.get("max_tokens", 4096))
+            reasoning_effort = payload.get("reasoning_effort", "medium")
+            freq_penalty = float(payload.get("frequency_penalty", 0.0))
+            pres_penalty = float(payload.get("presence_penalty", 0.0))
 
             inp_path = Path(input_file)
             out_dir = Path(output_dir)
@@ -89,6 +95,12 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
                     api_key=api_key,
                     base_url=base_url,
                     custom_prompt=custom_prompt,
+                    temperature=temperature,
+                    top_p=top_p,
+                    max_tokens=max_tokens,
+                    reasoning_effort=reasoning_effort,
+                    frequency_penalty=freq_penalty,
+                    presence_penalty=pres_penalty,
                     log_callback=_ai_log_cb,
                 )
             elif provider_type == "mock":
