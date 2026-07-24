@@ -60,14 +60,14 @@
     }
 
     .container {
-      max-width: 1240px;
+      max-width: 1280px;
       margin: 24px auto;
       padding: 0 16px;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: 480px 1fr;
+      grid-template-columns: 500px 1fr;
       gap: 20px;
     }
 
@@ -143,6 +143,16 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
+    }
+
+    .search-box {
+      margin-bottom: 8px;
+      position: relative;
+    }
+
+    .search-box input {
+      border-color: rgba(188, 140, 255, 0.4);
+      background: rgba(13, 17, 23, 0.9);
     }
 
     /* CATEGORIZED LANGUAGES */
@@ -278,7 +288,7 @@
   <header>
     <div class="brand">
       FGG Fast Global Translator
-      <span class="brand-tag">v2.0 (Granular AI Fine-Tuning)</span>
+      <span class="brand-tag">v2.0 (Complete AI Catalog & Instant Search)</span>
     </div>
   </header>
 
@@ -304,53 +314,232 @@
             <label>Движок перевода</label>
             <select id="providerSelect" onchange="onProviderChange(this.value)">
               <option value="google">Google Translate (Бесплатно & Быстро)</option>
-              <option value="ai">🤖 AI / LLM Engine (Все модели ИИ + Тонкая настройка)</option>
+              <option value="ai">🤖 AI / LLM Engine (Полный каталог моделей + Поиск)</option>
               <option value="mock">Mock Engine (Тестовый режим)</option>
             </select>
           </div>
 
-          <!-- GRANULAR AI CONFIG & FINE-TUNING PANEL -->
+          <!-- GRANULAR AI CONFIG & INSTANT MODEL SEARCH -->
           <div class="ai-panel" id="aiConfigPanel">
-            <div class="ai-panel-title">🤖 Модель и Точечная Настройка ИИ</div>
+            <div class="ai-panel-title">🤖 Поиск & Настройка Модели ИИ</div>
+
+            <!-- INSTANT MODEL SEARCH INPUT -->
+            <div class="search-box">
+              <label>🔍 Быстрый поиск модели ИИ</label>
+              <input type="text" id="aiSearchInput" placeholder="Поиск (например: GPT-5, Claude 3.7, DeepSeek R1, Grok 4, Llama 4, Qwen3)..." oninput="filterAiModels(this.value)">
+            </div>
 
             <div class="field">
-              <label>Модель ИИ</label>
-              <select id="aiModelSelect" onchange="onAiModelChange(this.value)">
+              <label>Выбранная модель ИИ (<span id="modelCountLabel">100+ доступно</span>)</label>
+              <select id="aiModelSelect" size="6" style="height:140px;" onchange="onAiModelChange(this.value)">
+                
                 <optgroup label="OpenAI">
-                  <option value="openai-gpt4o">OpenAI GPT-4o</option>
-                  <option value="openai-gpt4o-mini" selected>OpenAI GPT-4o mini</option>
-                  <option value="openai-o3-mini">OpenAI o3-mini (Reasoning)</option>
-                  <option value="openai-o1-mini">OpenAI o1-mini</option>
-                  <option value="openai-gpt4-turbo">OpenAI GPT-4 Turbo</option>
+                  <option value="gpt-5">GPT-5</option>
+                  <option value="gpt-5-thinking">GPT-5 Thinking</option>
+                  <option value="gpt-5-thinking-mini">GPT-5 Thinking Mini</option>
+                  <option value="gpt-5-mini">GPT-5 Mini</option>
+                  <option value="gpt-5-nano">GPT-5 Nano</option>
+                  <option value="gpt-4.1">GPT-4.1</option>
+                  <option value="gpt-4.1-mini">GPT-4.1 Mini</option>
+                  <option value="gpt-4.1-nano">GPT-4.1 Nano</option>
+                  <option value="gpt-4o">GPT-4o</option>
+                  <option value="gpt-4o-mini" selected>GPT-4o Mini</option>
+                  <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                  <option value="gpt-4">GPT-4</option>
+                  <option value="gpt-4-32k">GPT-4 32K</option>
+                  <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                  <option value="o1">o1</option>
+                  <option value="o1-pro">o1 Pro</option>
+                  <option value="o1-mini">o1 Mini</option>
+                  <option value="o3">o3</option>
+                  <option value="o3-pro">o3 Pro</option>
+                  <option value="o3-mini">o3 Mini</option>
+                  <option value="o4-mini">o4 Mini</option>
                 </optgroup>
+
                 <optgroup label="Anthropic Claude">
-                  <option value="anthropic-claude-35-sonnet">Claude 3.5 Sonnet</option>
-                  <option value="anthropic-claude-35-haiku">Claude 3.5 Haiku</option>
-                  <option value="anthropic-claude-3-opus">Claude 3 Opus</option>
+                  <option value="claude-opus-4.1">Claude Opus 4.1</option>
+                  <option value="claude-opus-4">Claude Opus 4</option>
+                  <option value="claude-sonnet-4">Claude Sonnet 4</option>
+                  <option value="claude-3.7-sonnet">Claude 3.7 Sonnet</option>
+                  <option value="claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+                  <option value="claude-3.5-haiku">Claude 3.5 Haiku</option>
+                  <option value="claude-3-opus">Claude 3 Opus</option>
+                  <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                  <option value="claude-3-haiku">Claude 3 Haiku</option>
                 </optgroup>
+
                 <optgroup label="Google Gemini">
-                  <option value="gemini-20-flash-exp">Gemini 2.0 Flash (Exp)</option>
-                  <option value="gemini-20-thinking">Gemini 2.0 Thinking (Reasoning)</option>
-                  <option value="gemini-15-pro">Gemini 1.5 Pro</option>
-                  <option value="gemini-15-flash">Gemini 1.5 Flash</option>
+                  <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                  <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                  <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
+                  <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                  <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
+                  <option value="gemini-2.0-flash-preview">Gemini 2.0 Flash Preview</option>
+                  <option value="gemini-2.0-flash-experimental">Gemini 2.0 Flash Experimental</option>
+                  <option value="gemini-2.0-thinking">Gemini 2.0 Thinking</option>
+                  <option value="gemini-2.0-thinking-experimental">Gemini 2.0 Thinking Experimental</option>
+                  <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                  <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                  <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash-8B</option>
+                  <option value="gemma-3">Gemma 3</option>
+                  <option value="gemma-3n">Gemma 3n</option>
                 </optgroup>
+
                 <optgroup label="DeepSeek">
-                  <option value="deepseek-v3">DeepSeek V3 (Chat)</option>
-                  <option value="deepseek-r1">DeepSeek R1 (Reasoning)</option>
+                  <option value="deepseek-v3">DeepSeek V3</option>
+                  <option value="deepseek-v3.1">DeepSeek V3.1</option>
+                  <option value="deepseek-r1">DeepSeek R1</option>
+                  <option value="deepseek-r1-0528">DeepSeek R1-0528</option>
+                  <option value="deepseek-coder-v2">DeepSeek Coder V2</option>
+                  <option value="deepseek-janus-pro">DeepSeek Janus Pro</option>
                 </optgroup>
-                <optgroup label="Open-Source & Local">
-                  <option value="meta-llama-33-70b">Meta Llama 3.3 70B</option>
-                  <option value="qwen-25-72b">Qwen 2.5 72B Instruct</option>
-                  <option value="mistral-large">Mistral Large 2</option>
-                  <option value="local-ollama">Local Ollama / vLLM (localhost:11434)</option>
-                  <option value="openrouter">OpenRouter (Any Model)</option>
-                  <option value="custom">Custom Endpoint / Model</option>
+
+                <optgroup label="Meta Llama">
+                  <option value="llama-4-maverick">Llama 4 Maverick</option>
+                  <option value="llama-4-scout">Llama 4 Scout</option>
+                  <option value="llama-3.3-70b-instruct">Llama 3.3 70B Instruct</option>
+                  <option value="llama-3.2-90b-vision">Llama 3.2 90B Vision</option>
+                  <option value="llama-3.2-11b-vision">Llama 3.2 11B Vision</option>
+                  <option value="llama-3.2-3b">Llama 3.2 3B</option>
+                  <option value="llama-3.2-1b">Llama 3.2 1B</option>
+                  <option value="llama-3.1-405b-instruct">Llama 3.1 405B Instruct</option>
+                  <option value="llama-3.1-70b-instruct">Llama 3.1 70B Instruct</option>
+                  <option value="llama-3.1-8b-instruct">Llama 3.1 8B Instruct</option>
+                  <option value="llama-3-70b-instruct">Llama 3 70B Instruct</option>
+                  <option value="llama-3-8b-instruct">Llama 3 8B Instruct</option>
+                </optgroup>
+
+                <optgroup label="Qwen">
+                  <option value="qwen3-235b">Qwen3 235B</option>
+                  <option value="qwen3-32b">Qwen3 32B</option>
+                  <option value="qwen3-30b-a3b">Qwen3 30B-A3B</option>
+                  <option value="qwen3-14b">Qwen3 14B</option>
+                  <option value="qwen3-8b">Qwen3 8B</option>
+                  <option value="qwen3-4b">Qwen3 4B</option>
+                  <option value="qwen3-1.7b">Qwen3 1.7B</option>
+                  <option value="qwen3-0.6b">Qwen3 0.6B</option>
+                  <option value="qwen2.5-72b-instruct">Qwen2.5 72B Instruct</option>
+                  <option value="qwen2.5-32b-instruct">Qwen2.5 32B Instruct</option>
+                  <option value="qwen2.5-14b-instruct">Qwen2.5 14B Instruct</option>
+                  <option value="qwen2.5-7b-instruct">Qwen2.5 7B Instruct</option>
+                  <option value="qwen2.5-3b-instruct">Qwen2.5 3B Instruct</option>
+                  <option value="qwen2.5-1.5b-instruct">Qwen2.5 1.5B Instruct</option>
+                  <option value="qwen2.5-coder-32b">Qwen2.5 Coder 32B</option>
+                  <option value="qwen2.5-coder-14b">Qwen2.5 Coder 14B</option>
+                  <option value="qwen2.5-vl">Qwen2.5 VL</option>
+                  <option value="qwen2-vl">Qwen2 VL</option>
+                </optgroup>
+
+                <optgroup label="Mistral AI">
+                  <option value="magistral-medium">Magistral Medium</option>
+                  <option value="magistral-small">Magistral Small</option>
+                  <option value="mistral-large-2">Mistral Large 2</option>
+                  <option value="mistral-large">Mistral Large</option>
+                  <option value="mistral-medium-3">Mistral Medium 3</option>
+                  <option value="mistral-small-3">Mistral Small 3</option>
+                  <option value="mistral-small-3.1">Mistral Small 3.1</option>
+                  <option value="pixtral-large">Pixtral Large</option>
+                  <option value="pixtral-12b">Pixtral 12B</option>
+                  <option value="ministral-8b">Ministral 8B</option>
+                  <option value="ministral-3b">Ministral 3B</option>
+                  <option value="codestral">Codestral</option>
+                  <option value="devstral">Devstral</option>
+                  <option value="mixtral-8x22b">Mixtral 8x22B</option>
+                  <option value="mixtral-8x7b">Mixtral 8x7B</option>
+                  <option value="mistral-nemo">Mistral Nemo</option>
+                  <option value="mistral-7b">Mistral 7B</option>
+                </optgroup>
+
+                <optgroup label="xAI (Grok)">
+                  <option value="grok-4">Grok 4</option>
+                  <option value="grok-4-heavy">Grok 4 Heavy</option>
+                  <option value="grok-3">Grok 3</option>
+                  <option value="grok-3-mini">Grok 3 Mini</option>
+                  <option value="grok-2">Grok 2</option>
+                  <option value="grok-2-mini">Grok 2 Mini</option>
+                </optgroup>
+
+                <optgroup label="Moonshot AI (Kimi)">
+                  <option value="kimi-k2">Kimi K2</option>
+                  <option value="kimi-k1.5">Kimi K1.5</option>
+                </optgroup>
+
+                <optgroup label="Zhipu AI (GLM)">
+                  <option value="glm-4.5">GLM-4.5</option>
+                  <option value="glm-4.5-air">GLM-4.5 Air</option>
+                  <option value="glm-4-plus">GLM-4 Plus</option>
+                  <option value="glm-4-air">GLM-4 Air</option>
+                  <option value="glm-4-flash">GLM-4 Flash</option>
+                </optgroup>
+
+                <optgroup label="MiniMax">
+                  <option value="minimax-m1">MiniMax M1</option>
+                  <option value="minimax-text-01">MiniMax Text-01</option>
+                </optgroup>
+
+                <optgroup label="Cohere">
+                  <option value="command-a">Command A</option>
+                  <option value="command-r-plus">Command R+</option>
+                  <option value="command-r">Command R</option>
+                </optgroup>
+
+                <optgroup label="AI21">
+                  <option value="jamba-large">Jamba Large</option>
+                  <option value="jamba-mini">Jamba Mini</option>
+                </optgroup>
+
+                <optgroup label="Microsoft">
+                  <option value="phi-4">Phi-4</option>
+                  <option value="phi-4-mini">Phi-4 Mini</option>
+                  <option value="phi-4-multimodal">Phi-4 Multimodal</option>
+                  <option value="phi-3.5-mini">Phi-3.5 Mini</option>
+                  <option value="phi-3-medium">Phi-3 Medium</option>
+                </optgroup>
+
+                <optgroup label="IBM Granite">
+                  <option value="granite-3.3-8b">Granite 3.3 8B</option>
+                  <option value="granite-3.3-2b">Granite 3.3 2B</option>
+                  <option value="granite-vision">Granite Vision</option>
+                  <option value="granite-code">Granite Code</option>
+                </optgroup>
+
+                <optgroup label="NVIDIA">
+                  <option value="nemotron-ultra">Nemotron Ultra</option>
+                  <option value="nemotron-70b">Nemotron 70B</option>
+                  <option value="nemotron-nano">Nemotron Nano</option>
+                </optgroup>
+
+                <optgroup label="Local / Self-Hosted">
+                  <option value="ollama">Ollama</option>
+                  <option value="vllm">vLLM</option>
+                  <option value="llama.cpp">llama.cpp</option>
+                  <option value="lm-studio">LM Studio</option>
+                  <option value="text-gen-webui">Text Generation WebUI</option>
+                  <option value="koboldcpp">KoboldCpp</option>
+                  <option value="localai">LocalAI</option>
+                </optgroup>
+
+                <optgroup label="Routers & Cloud Providers">
+                  <option value="openrouter">OpenRouter</option>
+                  <option value="together-ai">Together AI</option>
+                  <option value="fireworks-ai">Fireworks AI</option>
+                  <option value="groq">Groq LPU</option>
+                  <option value="cerebras">Cerebras</option>
+                  <option value="sambanova">SambaNova</option>
+                  <option value="replicate">Replicate</option>
+                  <option value="huggingface">Hugging Face</option>
+                  <option value="azure-openai">Azure OpenAI</option>
+                  <option value="vertex-ai">Vertex AI</option>
+                  <option value="amazon-bedrock">Amazon Bedrock</option>
+                  <option value="cloudflare-workers-ai">Cloudflare Workers AI</option>
+                  <option value="custom">Custom Endpoint (OpenAI API)</option>
                 </optgroup>
               </select>
             </div>
 
             <div class="field">
-              <label>API Ключ (Для Ollama можно оставить пустым)</label>
+              <label>API Ключ (Для локального Ollama можно оставить пустым)</label>
               <input type="password" id="aiApiKey" placeholder="sk-...">
             </div>
 
@@ -360,13 +549,12 @@
             </div>
 
             <div class="field">
-              <label>Игровой контекст / Системный промпт</label>
+              <label>Игровой контекст / Промпт</label>
               <textarea id="aiCustomPrompt" rows="2" placeholder="Особенности жанра, стиль текста (RPG, хулиганский сленг, фэнтези)"></textarea>
             </div>
 
-            <!-- FINE-TUNING SLIDERS & CONTROLS -->
             <div style="font-size:11px; font-weight:600; color:var(--purple); margin:10px 0 6px 0; text-transform:uppercase;">
-              🎛️ Точечные параметры гиперпараметров
+              🎛️ Гиперпараметры перевода
             </div>
 
             <div class="tuning-grid">
@@ -392,7 +580,7 @@
               </div>
 
               <div class="field">
-                <label>Reasoning Effort (o3/R1)</label>
+                <label>Reasoning Effort (R1/o3/Thinking)</label>
                 <select id="aiReasoning">
                   <option value="low">Low (Fast)</option>
                   <option value="medium" selected>Medium</option>
@@ -503,13 +691,30 @@
       aiPanel.style.display = (val === 'ai') ? 'block' : 'none';
     }
 
+    function filterAiModels(query) {
+      const select = document.getElementById('aiModelSelect');
+      const q = query.toLowerCase().trim();
+      let visibleCount = 0;
+
+      Array.from(select.querySelectorAll('option')).forEach(opt => {
+        const text = opt.innerText.toLowerCase();
+        const val = opt.value.toLowerCase();
+        if (!q || text.includes(q) || val.includes(q)) {
+          opt.style.display = '';
+          visibleCount++;
+        } else {
+          opt.style.display = 'none';
+        }
+      });
+
+      document.getElementById('modelCountLabel').innerText = `${visibleCount} найдено`;
+    }
+
     function onAiModelChange(modelKey) {
       const baseUrlInput = document.getElementById('aiBaseUrl');
-      if (modelKey === 'local-ollama') {
+      if (['ollama', 'vllm', 'llama.cpp', 'lm-studio', 'text-gen-webui', 'koboldcpp', 'localai'].includes(modelKey)) {
         baseUrlInput.value = 'http://localhost:11434/v1';
-      } else if (modelKey === 'openrouter') {
-        baseUrlInput.value = 'https://openrouter.ai/api/v1';
-      } else if (modelKey.startsWith('meta-llama') || modelKey.startsWith('qwen')) {
+      } else if (modelKey === 'openrouter' || modelKey.includes('llama') || modelKey.includes('qwen') || modelKey.includes('granite') || modelKey.includes('phi')) {
         baseUrlInput.value = 'https://openrouter.ai/api/v1';
       } else {
         baseUrlInput.value = '';
@@ -547,7 +752,6 @@
       const workers = parseInt(document.getElementById('workers').value);
       const provider = document.getElementById('providerSelect').value;
       
-      // Fine-Tuning Parameters
       const aiModel = document.getElementById('aiModelSelect').value;
       const aiApiKey = document.getElementById('aiApiKey').value;
       const aiBaseUrl = document.getElementById('aiBaseUrl').value;
@@ -557,7 +761,7 @@
       const aiMaxTokens = parseInt(document.getElementById('aiMaxTokens').value);
       const aiReasoning = document.getElementById('aiReasoning').value;
 
-      const selectedLangs = Array.from(document.querySelectorAll('.lang-item input:checked')).map(c => c.value);
+      const selectedLangs = Array.from(document.querySelectorAll('.chip-item input:checked')).map(c => c.value);
 
       if (!selectedLangs.length) {
         alert("Выберите языки для перевода");
@@ -572,7 +776,7 @@
       appendLog(`[job] Input: ${inputFile} | Provider: ${provider.toUpperCase()} | Workers: ${workers}`);
 
       if (provider === 'ai') {
-        appendAiLog(`\n🤖 [AI Fine-Tuned Session] Model: ${aiModel} | Temp: ${aiTemp} | TopP: ${aiTopP} | MaxTokens: ${aiMaxTokens} | Reasoning: ${aiReasoning}`);
+        appendAiLog(`\n🤖 [AI Session] Model: ${aiModel} | Temp: ${aiTemp} | TopP: ${aiTopP} | MaxTokens: ${aiMaxTokens} | Reasoning: ${aiReasoning}`);
       }
 
       try {

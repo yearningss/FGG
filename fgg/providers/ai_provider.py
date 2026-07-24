@@ -1,8 +1,7 @@
 """
 Unified Multi-Model AI Translation Engine for FGG 2.0.
-Supports OpenAI, Anthropic, Gemini, DeepSeek, Mistral, Llama, Qwen, and Ollama/vLLM/OpenRouter.
-Includes granular fine-tuning parameters (temperature, top_p, penalties, max_tokens, reasoning_effort)
-and real-time AI reasoning & stream logs.
+Supports all major AI model providers, reasoning engines, local LLMs, and API routers.
+Includes granular fine-tuning parameters and real-time AI reasoning & stream logs.
 """
 
 from __future__ import annotations
@@ -26,50 +25,199 @@ Example Input: ["Привет, [J]! {clr:red}Опасность{clr/}"]
 Example Output: ["Hello, [J]! {clr:red}Danger{clr/}"]
 """
 
-# Extensive AI Model Catalog
+# Ultimate AI Model Catalog
 AI_MODELS: Dict[str, Dict[str, str]] = {
-    # OPENAI
-    "openai-gpt4o": {"name": "OpenAI GPT-4o", "provider": "openai", "model": "gpt-4o", "base_url": "https://api.openai.com/v1"},
-    "openai-gpt4o-mini": {"name": "OpenAI GPT-4o mini", "provider": "openai", "model": "gpt-4o-mini", "base_url": "https://api.openai.com/v1"},
-    "openai-o3-mini": {"name": "OpenAI o3-mini (Reasoning)", "provider": "openai", "model": "o3-mini", "base_url": "https://api.openai.com/v1"},
-    "openai-o1-mini": {"name": "OpenAI o1-mini", "provider": "openai", "model": "o1-mini", "base_url": "https://api.openai.com/v1"},
-    "openai-gpt4-turbo": {"name": "OpenAI GPT-4 Turbo", "provider": "openai", "model": "gpt-4-turbo", "base_url": "https://api.openai.com/v1"},
+    # --- OpenAI ---
+    "gpt-5": {"name": "GPT-5", "provider": "openai", "model": "gpt-5", "base_url": "https://api.openai.com/v1"},
+    "gpt-5-thinking": {"name": "GPT-5 Thinking", "provider": "openai", "model": "gpt-5-thinking", "base_url": "https://api.openai.com/v1"},
+    "gpt-5-thinking-mini": {"name": "GPT-5 Thinking Mini", "provider": "openai", "model": "gpt-5-thinking-mini", "base_url": "https://api.openai.com/v1"},
+    "gpt-5-mini": {"name": "GPT-5 Mini", "provider": "openai", "model": "gpt-5-mini", "base_url": "https://api.openai.com/v1"},
+    "gpt-5-nano": {"name": "GPT-5 Nano", "provider": "openai", "model": "gpt-5-nano", "base_url": "https://api.openai.com/v1"},
+    "gpt-4.1": {"name": "GPT-4.1", "provider": "openai", "model": "gpt-4.1", "base_url": "https://api.openai.com/v1"},
+    "gpt-4.1-mini": {"name": "GPT-4.1 Mini", "provider": "openai", "model": "gpt-4.1-mini", "base_url": "https://api.openai.com/v1"},
+    "gpt-4.1-nano": {"name": "GPT-4.1 Nano", "provider": "openai", "model": "gpt-4.1-nano", "base_url": "https://api.openai.com/v1"},
+    "gpt-4o": {"name": "GPT-4o", "provider": "openai", "model": "gpt-4o", "base_url": "https://api.openai.com/v1"},
+    "gpt-4o-mini": {"name": "GPT-4o Mini", "provider": "openai", "model": "gpt-4o-mini", "base_url": "https://api.openai.com/v1"},
+    "gpt-4-turbo": {"name": "GPT-4 Turbo", "provider": "openai", "model": "gpt-4-turbo", "base_url": "https://api.openai.com/v1"},
+    "gpt-4": {"name": "GPT-4", "provider": "openai", "model": "gpt-4", "base_url": "https://api.openai.com/v1"},
+    "gpt-4-32k": {"name": "GPT-4 32K", "provider": "openai", "model": "gpt-4-32k", "base_url": "https://api.openai.com/v1"},
+    "gpt-3.5-turbo": {"name": "GPT-3.5 Turbo", "provider": "openai", "model": "gpt-3.5-turbo", "base_url": "https://api.openai.com/v1"},
+    "o1": {"name": "o1", "provider": "openai", "model": "o1", "base_url": "https://api.openai.com/v1"},
+    "o1-pro": {"name": "o1 Pro", "provider": "openai", "model": "o1-pro", "base_url": "https://api.openai.com/v1"},
+    "o1-mini": {"name": "o1 Mini", "provider": "openai", "model": "o1-mini", "base_url": "https://api.openai.com/v1"},
+    "o3": {"name": "o3", "provider": "openai", "model": "o3", "base_url": "https://api.openai.com/v1"},
+    "o3-pro": {"name": "o3 Pro", "provider": "openai", "model": "o3-pro", "base_url": "https://api.openai.com/v1"},
+    "o3-mini": {"name": "o3 Mini", "provider": "openai", "model": "o3-mini", "base_url": "https://api.openai.com/v1"},
+    "o4-mini": {"name": "o4 Mini", "provider": "openai", "model": "o4-mini", "base_url": "https://api.openai.com/v1"},
 
-    # ANTHROPIC
-    "anthropic-claude-35-sonnet": {"name": "Anthropic Claude 3.5 Sonnet", "provider": "anthropic", "model": "claude-3-5-sonnet-20241022", "base_url": "https://api.anthropic.com/v1"},
-    "anthropic-claude-35-haiku": {"name": "Anthropic Claude 3.5 Haiku", "provider": "anthropic", "model": "claude-3-5-haiku-20241022", "base_url": "https://api.anthropic.com/v1"},
-    "anthropic-claude-3-opus": {"name": "Anthropic Claude 3 Opus", "provider": "anthropic", "model": "claude-3-opus-20240229", "base_url": "https://api.anthropic.com/v1"},
-    "anthropic-claude-3-haiku": {"name": "Anthropic Claude 3 Haiku", "provider": "anthropic", "model": "claude-3-haiku-20240307", "base_url": "https://api.anthropic.com/v1"},
+    # --- Anthropic Claude ---
+    "claude-opus-4.1": {"name": "Claude Opus 4.1", "provider": "anthropic", "model": "claude-opus-4.1", "base_url": "https://api.anthropic.com/v1"},
+    "claude-opus-4": {"name": "Claude Opus 4", "provider": "anthropic", "model": "claude-opus-4", "base_url": "https://api.anthropic.com/v1"},
+    "claude-sonnet-4": {"name": "Claude Sonnet 4", "provider": "anthropic", "model": "claude-sonnet-4", "base_url": "https://api.anthropic.com/v1"},
+    "claude-3.7-sonnet": {"name": "Claude 3.7 Sonnet", "provider": "anthropic", "model": "claude-3-7-sonnet", "base_url": "https://api.anthropic.com/v1"},
+    "claude-3.5-sonnet": {"name": "Claude 3.5 Sonnet", "provider": "anthropic", "model": "claude-3-5-sonnet-20241022", "base_url": "https://api.anthropic.com/v1"},
+    "claude-3.5-haiku": {"name": "Claude 3.5 Haiku", "provider": "anthropic", "model": "claude-3-5-haiku-20241022", "base_url": "https://api.anthropic.com/v1"},
+    "claude-3-opus": {"name": "Claude 3 Opus", "provider": "anthropic", "model": "claude-3-opus-20240229", "base_url": "https://api.anthropic.com/v1"},
+    "claude-3-sonnet": {"name": "Claude 3 Sonnet", "provider": "anthropic", "model": "claude-3-sonnet-20240229", "base_url": "https://api.anthropic.com/v1"},
+    "claude-3-haiku": {"name": "Claude 3 Haiku", "provider": "anthropic", "model": "claude-3-haiku-20240307", "base_url": "https://api.anthropic.com/v1"},
 
-    # GOOGLE GEMINI
-    "gemini-20-flash-exp": {"name": "Google Gemini 2.0 Flash (Experimental)", "provider": "gemini", "model": "gemini-2.0-flash-exp", "base_url": "https://generativelanguage.googleapis.com/v1beta"},
-    "gemini-20-thinking": {"name": "Google Gemini 2.0 Thinking (Reasoning)", "provider": "gemini", "model": "gemini-2.0-flash-thinking-exp-1219", "base_url": "https://generativelanguage.googleapis.com/v1beta"},
-    "gemini-15-pro": {"name": "Google Gemini 1.5 Pro", "provider": "gemini", "model": "gemini-1.5-pro", "base_url": "https://generativelanguage.googleapis.com/v1beta"},
-    "gemini-15-flash": {"name": "Google Gemini 1.5 Flash", "provider": "gemini", "model": "gemini-1.5-flash", "base_url": "https://generativelanguage.googleapis.com/v1beta"},
+    # --- Google Gemini ---
+    "gemini-2.5-pro": {"name": "Gemini 2.5 Pro", "provider": "gemini", "model": "gemini-2.5-pro", "base_url": "https://generativelanguage.googleapis.com/v1beta"},
+    "gemini-2.5-flash": {"name": "Gemini 2.5 Flash", "provider": "gemini", "model": "gemini-2.5-flash", "base_url": "https://generativelanguage.googleapis.com/v1beta"},
+    "gemini-2.5-flash-lite": {"name": "Gemini 2.5 Flash Lite", "provider": "gemini", "model": "gemini-2.5-flash-lite", "base_url": "https://generativelanguage.googleapis.com/v1beta"},
+    "gemini-2.0-flash": {"name": "Gemini 2.0 Flash", "provider": "gemini", "model": "gemini-2.0-flash", "base_url": "https://generativelanguage.googleapis.com/v1beta"},
+    "gemini-2.0-flash-lite": {"name": "Gemini 2.0 Flash Lite", "provider": "gemini", "model": "gemini-2.0-flash-lite", "base_url": "https://generativelanguage.googleapis.com/v1beta"},
+    "gemini-2.0-flash-preview": {"name": "Gemini 2.0 Flash Preview", "provider": "gemini", "model": "gemini-2.0-flash-preview", "base_url": "https://generativelanguage.googleapis.com/v1beta"},
+    "gemini-2.0-flash-experimental": {"name": "Gemini 2.0 Flash Experimental", "provider": "gemini", "model": "gemini-2.0-flash-exp", "base_url": "https://generativelanguage.googleapis.com/v1beta"},
+    "gemini-2.0-thinking": {"name": "Gemini 2.0 Thinking", "provider": "gemini", "model": "gemini-2.0-flash-thinking", "base_url": "https://generativelanguage.googleapis.com/v1beta"},
+    "gemini-2.0-thinking-experimental": {"name": "Gemini 2.0 Thinking Experimental", "provider": "gemini", "model": "gemini-2.0-flash-thinking-exp-1219", "base_url": "https://generativelanguage.googleapis.com/v1beta"},
+    "gemini-1.5-pro": {"name": "Gemini 1.5 Pro", "provider": "gemini", "model": "gemini-1.5-pro", "base_url": "https://generativelanguage.googleapis.com/v1beta"},
+    "gemini-1.5-flash": {"name": "Gemini 1.5 Flash", "provider": "gemini", "model": "gemini-1.5-flash", "base_url": "https://generativelanguage.googleapis.com/v1beta"},
+    "gemini-1.5-flash-8b": {"name": "Gemini 1.5 Flash-8B", "provider": "gemini", "model": "gemini-1.5-flash-8b", "base_url": "https://generativelanguage.googleapis.com/v1beta"},
+    "gemma-3": {"name": "Gemma 3", "provider": "gemini", "model": "gemma-3", "base_url": "https://generativelanguage.googleapis.com/v1beta"},
+    "gemma-3n": {"name": "Gemma 3n", "provider": "gemini", "model": "gemma-3n", "base_url": "https://generativelanguage.googleapis.com/v1beta"},
 
-    # DEEPSEEK
+    # --- DeepSeek ---
     "deepseek-v3": {"name": "DeepSeek V3", "provider": "deepseek", "model": "deepseek-chat", "base_url": "https://api.deepseek.com/v1"},
-    "deepseek-r1": {"name": "DeepSeek R1 (Reasoning)", "provider": "deepseek", "model": "deepseek-reasoner", "base_url": "https://api.deepseek.com/v1"},
+    "deepseek-v3.1": {"name": "DeepSeek V3.1", "provider": "deepseek", "model": "deepseek-v3.1", "base_url": "https://api.deepseek.com/v1"},
+    "deepseek-r1": {"name": "DeepSeek R1", "provider": "deepseek", "model": "deepseek-reasoner", "base_url": "https://api.deepseek.com/v1"},
+    "deepseek-r1-0528": {"name": "DeepSeek R1-0528", "provider": "deepseek", "model": "deepseek-r1-0528", "base_url": "https://api.deepseek.com/v1"},
+    "deepseek-coder-v2": {"name": "DeepSeek Coder V2", "provider": "deepseek", "model": "deepseek-coder", "base_url": "https://api.deepseek.com/v1"},
+    "deepseek-janus-pro": {"name": "DeepSeek Janus Pro", "provider": "deepseek", "model": "deepseek-janus-pro", "base_url": "https://api.deepseek.com/v1"},
 
-    # MISTRAL
-    "mistral-large": {"name": "Mistral Large 2", "provider": "openai", "model": "mistral-large-latest", "base_url": "https://api.mistral.ai/v1"},
-    "mistral-small": {"name": "Mistral Small", "provider": "openai", "model": "mistral-small-latest", "base_url": "https://api.mistral.ai/v1"},
+    # --- Meta Llama ---
+    "llama-4-maverick": {"name": "Llama 4 Maverick", "provider": "openai", "model": "meta-llama/llama-4-maverick", "base_url": "https://openrouter.ai/api/v1"},
+    "llama-4-scout": {"name": "Llama 4 Scout", "provider": "openai", "model": "meta-llama/llama-4-scout", "base_url": "https://openrouter.ai/api/v1"},
+    "llama-3.3-70b-instruct": {"name": "Llama 3.3 70B Instruct", "provider": "openai", "model": "meta-llama/llama-3.3-70b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "llama-3.2-90b-vision": {"name": "Llama 3.2 90B Vision", "provider": "openai", "model": "meta-llama/llama-3.2-90b-vision-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "llama-3.2-11b-vision": {"name": "Llama 3.2 11B Vision", "provider": "openai", "model": "meta-llama/llama-3.2-11b-vision-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "llama-3.2-3b": {"name": "Llama 3.2 3B", "provider": "openai", "model": "meta-llama/llama-3.2-3b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "llama-3.2-1b": {"name": "Llama 3.2 1B", "provider": "openai", "model": "meta-llama/llama-3.2-1b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "llama-3.1-405b-instruct": {"name": "Llama 3.1 405B Instruct", "provider": "openai", "model": "meta-llama/llama-3.1-405b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "llama-3.1-70b-instruct": {"name": "Llama 3.1 70B Instruct", "provider": "openai", "model": "meta-llama/llama-3.1-70b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "llama-3.1-8b-instruct": {"name": "Llama 3.1 8B Instruct", "provider": "openai", "model": "meta-llama/llama-3.1-8b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "llama-3-70b-instruct": {"name": "Llama 3 70B Instruct", "provider": "openai", "model": "meta-llama/llama-3-70b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "llama-3-8b-instruct": {"name": "Llama 3 8B Instruct", "provider": "openai", "model": "meta-llama/llama-3-8b-instruct", "base_url": "https://openrouter.ai/api/v1"},
 
-    # META LLAMA & QWEN (via OpenRouter or Ollama)
-    "meta-llama-33-70b": {"name": "Meta Llama 3.3 70B", "provider": "openai", "model": "meta-llama/llama-3.3-70b-instruct", "base_url": "https://openrouter.ai/api/v1"},
-    "qwen-25-72b": {"name": "Qwen 2.5 72B Instruct", "provider": "openai", "model": "qwen/qwen-2.5-72b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    # --- Qwen ---
+    "qwen3-235b": {"name": "Qwen3 235B", "provider": "openai", "model": "qwen/qwen3-235b", "base_url": "https://openrouter.ai/api/v1"},
+    "qwen3-32b": {"name": "Qwen3 32B", "provider": "openai", "model": "qwen/qwen3-32b", "base_url": "https://openrouter.ai/api/v1"},
+    "qwen3-30b-a3b": {"name": "Qwen3 30B-A3B", "provider": "openai", "model": "qwen/qwen3-30b-a3b", "base_url": "https://openrouter.ai/api/v1"},
+    "qwen3-14b": {"name": "Qwen3 14B", "provider": "openai", "model": "qwen/qwen3-14b", "base_url": "https://openrouter.ai/api/v1"},
+    "qwen3-8b": {"name": "Qwen3 8B", "provider": "openai", "model": "qwen/qwen3-8b", "base_url": "https://openrouter.ai/api/v1"},
+    "qwen3-4b": {"name": "Qwen3 4B", "provider": "openai", "model": "qwen/qwen3-4b", "base_url": "https://openrouter.ai/api/v1"},
+    "qwen3-1.7b": {"name": "Qwen3 1.7B", "provider": "openai", "model": "qwen/qwen3-1.7b", "base_url": "https://openrouter.ai/api/v1"},
+    "qwen3-0.6b": {"name": "Qwen3 0.6B", "provider": "openai", "model": "qwen/qwen3-0.6b", "base_url": "https://openrouter.ai/api/v1"},
+    "qwen2.5-72b-instruct": {"name": "Qwen2.5 72B Instruct", "provider": "openai", "model": "qwen/qwen-2.5-72b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "qwen2.5-32b-instruct": {"name": "Qwen2.5 32B Instruct", "provider": "openai", "model": "qwen/qwen-2.5-32b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "qwen2.5-14b-instruct": {"name": "Qwen2.5 14B Instruct", "provider": "openai", "model": "qwen/qwen-2.5-14b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "qwen2.5-7b-instruct": {"name": "Qwen2.5 7B Instruct", "provider": "openai", "model": "qwen/qwen-2.5-7b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "qwen2.5-3b-instruct": {"name": "Qwen2.5 3B Instruct", "provider": "openai", "model": "qwen/qwen-2.5-3b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "qwen2.5-1.5b-instruct": {"name": "Qwen2.5 1.5B Instruct", "provider": "openai", "model": "qwen/qwen-2.5-1.5b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "qwen2.5-coder-32b": {"name": "Qwen2.5 Coder 32B", "provider": "openai", "model": "qwen/qwen-2.5-coder-32b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "qwen2.5-coder-14b": {"name": "Qwen2.5 Coder 14B", "provider": "openai", "model": "qwen/qwen-2.5-coder-14b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "qwen2.5-vl": {"name": "Qwen2.5 VL", "provider": "openai", "model": "qwen/qwen-2.5-vl-72b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "qwen2-vl": {"name": "Qwen2 VL", "provider": "openai", "model": "qwen/qwen-2-vl-72b-instruct", "base_url": "https://openrouter.ai/api/v1"},
 
-    # LOCAL / CUSTOM
-    "local-ollama": {"name": "Local Ollama / vLLM (localhost:11434)", "provider": "openai", "model": "llama3.2", "base_url": "http://localhost:11434/v1"},
-    "openrouter": {"name": "OpenRouter (All AI Models)", "provider": "openai", "model": "auto", "base_url": "https://openrouter.ai/api/v1"},
-    "custom": {"name": "Custom Model (User-defined Endpoint)", "provider": "openai", "model": "custom", "base_url": "http://localhost:11434/v1"},
+    # --- Mistral AI ---
+    "magistral-medium": {"name": "Magistral Medium", "provider": "openai", "model": "mistralai/magistral-medium", "base_url": "https://api.mistral.ai/v1"},
+    "magistral-small": {"name": "Magistral Small", "provider": "openai", "model": "mistralai/magistral-small", "base_url": "https://api.mistral.ai/v1"},
+    "mistral-large-2": {"name": "Mistral Large 2", "provider": "openai", "model": "mistral-large-latest", "base_url": "https://api.mistral.ai/v1"},
+    "mistral-large": {"name": "Mistral Large", "provider": "openai", "model": "mistral-large", "base_url": "https://api.mistral.ai/v1"},
+    "mistral-medium-3": {"name": "Mistral Medium 3", "provider": "openai", "model": "mistral-medium-3", "base_url": "https://api.mistral.ai/v1"},
+    "mistral-small-3": {"name": "Mistral Small 3", "provider": "openai", "model": "mistral-small-3", "base_url": "https://api.mistral.ai/v1"},
+    "mistral-small-3.1": {"name": "Mistral Small 3.1", "provider": "openai", "model": "mistral-small-3.1", "base_url": "https://api.mistral.ai/v1"},
+    "pixtral-large": {"name": "Pixtral Large", "provider": "openai", "model": "pixtral-large-latest", "base_url": "https://api.mistral.ai/v1"},
+    "pixtral-12b": {"name": "Pixtral 12B", "provider": "openai", "model": "pixtral-12b", "base_url": "https://api.mistral.ai/v1"},
+    "ministral-8b": {"name": "Ministral 8B", "provider": "openai", "model": "ministral-8b-latest", "base_url": "https://api.mistral.ai/v1"},
+    "ministral-3b": {"name": "Ministral 3B", "provider": "openai", "model": "ministral-3b-latest", "base_url": "https://api.mistral.ai/v1"},
+    "codestral": {"name": "Codestral", "provider": "openai", "model": "codestral-latest", "base_url": "https://api.mistral.ai/v1"},
+    "devstral": {"name": "Devstral", "provider": "openai", "model": "devstral", "base_url": "https://api.mistral.ai/v1"},
+    "mixtral-8x22b": {"name": "Mixtral 8x22B", "provider": "openai", "model": "open-mixtral-8x22b", "base_url": "https://api.mistral.ai/v1"},
+    "mixtral-8x7b": {"name": "Mixtral 8x7B", "provider": "openai", "model": "open-mixtral-8x7b", "base_url": "https://api.mistral.ai/v1"},
+    "mistral-nemo": {"name": "Mistral Nemo", "provider": "openai", "model": "open-mistral-nemo", "base_url": "https://api.mistral.ai/v1"},
+    "mistral-7b": {"name": "Mistral 7B", "provider": "openai", "model": "open-mistral-7b", "base_url": "https://api.mistral.ai/v1"},
+
+    # --- xAI (Grok) ---
+    "grok-4": {"name": "Grok 4", "provider": "openai", "model": "grok-4", "base_url": "https://api.x.ai/v1"},
+    "grok-4-heavy": {"name": "Grok 4 Heavy", "provider": "openai", "model": "grok-4-heavy", "base_url": "https://api.x.ai/v1"},
+    "grok-3": {"name": "Grok 3", "provider": "openai", "model": "grok-3", "base_url": "https://api.x.ai/v1"},
+    "grok-3-mini": {"name": "Grok 3 Mini", "provider": "openai", "model": "grok-3-mini", "base_url": "https://api.x.ai/v1"},
+    "grok-2": {"name": "Grok 2", "provider": "openai", "model": "grok-2", "base_url": "https://api.x.ai/v1"},
+    "grok-2-mini": {"name": "Grok 2 Mini", "provider": "openai", "model": "grok-2-mini", "base_url": "https://api.x.ai/v1"},
+
+    # --- Moonshot AI (Kimi) ---
+    "kimi-k2": {"name": "Kimi K2", "provider": "openai", "model": "kimi-k2", "base_url": "https://api.moonshot.cn/v1"},
+    "kimi-k1.5": {"name": "Kimi K1.5", "provider": "openai", "model": "kimi-k1.5", "base_url": "https://api.moonshot.cn/v1"},
+
+    # --- Zhipu AI (GLM) ---
+    "glm-4.5": {"name": "GLM-4.5", "provider": "openai", "model": "glm-4.5", "base_url": "https://open.bigmodel.cn/api/paas/v4"},
+    "glm-4.5-air": {"name": "GLM-4.5 Air", "provider": "openai", "model": "glm-4.5-air", "base_url": "https://open.bigmodel.cn/api/paas/v4"},
+    "glm-4-plus": {"name": "GLM-4 Plus", "provider": "openai", "model": "glm-4-plus", "base_url": "https://open.bigmodel.cn/api/paas/v4"},
+    "glm-4-air": {"name": "GLM-4 Air", "provider": "openai", "model": "glm-4-air", "base_url": "https://open.bigmodel.cn/api/paas/v4"},
+    "glm-4-flash": {"name": "GLM-4 Flash", "provider": "openai", "model": "glm-4-flash", "base_url": "https://open.bigmodel.cn/api/paas/v4"},
+
+    # --- MiniMax ---
+    "minimax-m1": {"name": "MiniMax M1", "provider": "openai", "model": "minimax-m1", "base_url": "https://api.minimax.chat/v1"},
+    "minimax-text-01": {"name": "MiniMax Text-01", "provider": "openai", "model": "minimax-text-01", "base_url": "https://api.minimax.chat/v1"},
+
+    # --- Cohere ---
+    "command-a": {"name": "Command A", "provider": "openai", "model": "command-a", "base_url": "https://api.cohere.com/v2"},
+    "command-r-plus": {"name": "Command R+", "provider": "openai", "model": "command-r-plus", "base_url": "https://api.cohere.com/v2"},
+    "command-r": {"name": "Command R", "provider": "openai", "model": "command-r", "base_url": "https://api.cohere.com/v2"},
+
+    # --- AI21 ---
+    "jamba-large": {"name": "Jamba Large", "provider": "openai", "model": "jamba-1.5-large", "base_url": "https://api.ai21.com/v1"},
+    "jamba-mini": {"name": "Jamba Mini", "provider": "openai", "model": "jamba-1.5-mini", "base_url": "https://api.ai21.com/v1"},
+
+    # --- Microsoft ---
+    "phi-4": {"name": "Phi-4", "provider": "openai", "model": "microsoft/phi-4", "base_url": "https://openrouter.ai/api/v1"},
+    "phi-4-mini": {"name": "Phi-4 Mini", "provider": "openai", "model": "microsoft/phi-4-mini", "base_url": "https://openrouter.ai/api/v1"},
+    "phi-4-multimodal": {"name": "Phi-4 Multimodal", "provider": "openai", "model": "microsoft/phi-4-multimodal", "base_url": "https://openrouter.ai/api/v1"},
+    "phi-3.5-mini": {"name": "Phi-3.5 Mini", "provider": "openai", "model": "microsoft/phi-3.5-mini-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "phi-3-medium": {"name": "Phi-3 Medium", "provider": "openai", "model": "microsoft/phi-3-medium-4k-instruct", "base_url": "https://openrouter.ai/api/v1"},
+
+    # --- IBM Granite ---
+    "granite-3.3-8b": {"name": "Granite 3.3 8B", "provider": "openai", "model": "ibm/granite-3.3-8b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "granite-3.3-2b": {"name": "Granite 3.3 2B", "provider": "openai", "model": "ibm/granite-3.3-2b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "granite-vision": {"name": "Granite Vision", "provider": "openai", "model": "ibm/granite-vision-3.1-2b-preview", "base_url": "https://openrouter.ai/api/v1"},
+    "granite-code": {"name": "Granite Code", "provider": "openai", "model": "ibm/granite-34b-code-instruct", "base_url": "https://openrouter.ai/api/v1"},
+
+    # --- NVIDIA ---
+    "nemotron-ultra": {"name": "Nemotron Ultra", "provider": "openai", "model": "nvidia/llama-3.1-nemotron-70b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "nemotron-70b": {"name": "Nemotron 70B", "provider": "openai", "model": "nvidia/nemotron-4-340b-instruct", "base_url": "https://openrouter.ai/api/v1"},
+    "nemotron-nano": {"name": "Nemotron Nano", "provider": "openai", "model": "nvidia/nemotron-nano", "base_url": "https://openrouter.ai/api/v1"},
+
+    # --- Local / Self-Hosted ---
+    "ollama": {"name": "Ollama (Local)", "provider": "openai", "model": "llama3.2", "base_url": "http://localhost:11434/v1"},
+    "vllm": {"name": "vLLM (Local)", "provider": "openai", "model": "default", "base_url": "http://localhost:8000/v1"},
+    "llama.cpp": {"name": "llama.cpp (Local Server)", "provider": "openai", "model": "default", "base_url": "http://localhost:8080/v1"},
+    "lm-studio": {"name": "LM Studio (Local)", "provider": "openai", "model": "default", "base_url": "http://localhost:1234/v1"},
+    "text-gen-webui": {"name": "Text Generation WebUI", "provider": "openai", "model": "default", "base_url": "http://localhost:5000/v1"},
+    "koboldcpp": {"name": "KoboldCpp", "provider": "openai", "model": "default", "base_url": "http://localhost:5001/v1"},
+    "localai": {"name": "LocalAI", "provider": "openai", "model": "default", "base_url": "http://localhost:8080/v1"},
+
+    # --- Routers / Aggregators ---
+    "openrouter": {"name": "OpenRouter", "provider": "openai", "model": "auto", "base_url": "https://openrouter.ai/api/v1"},
+    "together-ai": {"name": "Together AI", "provider": "openai", "model": "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo", "base_url": "https://api.together.xyz/v1"},
+    "fireworks-ai": {"name": "Fireworks AI", "provider": "openai", "model": "accounts/fireworks/models/llama-v3p1-70b-instruct", "base_url": "https://api.fireworks.ai/inference/v1"},
+    "groq": {"name": "Groq LPU", "provider": "openai", "model": "llama-3.3-70b-versatile", "base_url": "https://api.groq.com/openai/v1"},
+    "cerebras": {"name": "Cerebras Fast AI", "provider": "openai", "model": "llama3.1-70b", "base_url": "https://api.cerebras.ai/v1"},
+    "sambanova": {"name": "SambaNova Systems", "provider": "openai", "model": "Meta-Llama-3.1-70B-Instruct", "base_url": "https://api.sambanova.ai/v1"},
+    "replicate": {"name": "Replicate", "provider": "openai", "model": "meta/meta-llama-3-70b-instruct", "base_url": "https://api.replicate.com/v1"},
+    "huggingface": {"name": "Hugging Face Inference", "provider": "openai", "model": "meta-llama/Meta-Llama-3-70B-Instruct", "base_url": "https://api-inference.huggingface.co/v1"},
+    "azure-openai": {"name": "Azure OpenAI Service", "provider": "openai", "model": "gpt-4o", "base_url": "https://YOUR_RESOURCE.openai.azure.com/openai/deployments/YOUR_DEPLOYMENT"},
+    "vertex-ai": {"name": "Google Vertex AI", "provider": "gemini", "model": "gemini-1.5-pro", "base_url": "https://generativelanguage.googleapis.com/v1beta"},
+    "amazon-bedrock": {"name": "Amazon Bedrock (OpenAI Adapter)", "provider": "openai", "model": "anthropic.claude-3-5-sonnet", "base_url": "http://localhost:8080/v1"},
+    "cloudflare-workers-ai": {"name": "Cloudflare Workers AI", "provider": "openai", "model": "@cf/meta/llama-3.1-70b-instruct", "base_url": "https://api.cloudflare.com/client/v4/accounts/YOUR_ACCOUNT/ai/v1"},
+    "custom": {"name": "Custom Endpoint (OpenAI-compatible)", "provider": "openai", "model": "custom-model", "base_url": "http://localhost:11434/v1"},
 }
 
 
 class UnifiedAITranslator(BaseTranslator):
     def __init__(
         self,
-        model_key: str = "openai-gpt4o-mini",
+        model_key: str = "gpt-4o-mini",
         api_key: str = "",
         base_url: str = "",
         custom_model_name: str = "",
@@ -85,14 +233,13 @@ class UnifiedAITranslator(BaseTranslator):
         log_callback: Optional[Callable[[str], None]] = None,
     ) -> None:
         super().__init__(source_lang=source_lang, max_retries=max_retries)
-        self.preset = AI_MODELS.get(model_key, AI_MODELS["openai-gpt4o-mini"])
+        self.preset = AI_MODELS.get(model_key, AI_MODELS.get("gpt-4o-mini", AI_MODELS["custom"]))
         self.provider_type = self.preset["provider"]
         self.model = custom_model_name or self.preset["model"]
         self.base_url = (base_url or self.preset["base_url"]).rstrip("/")
         self.api_key = api_key or os.environ.get("AI_API_KEY") or os.environ.get("OPENAI_API_KEY", "")
         self.custom_prompt = custom_prompt
 
-        # Granular tuning parameters
         self.temperature = float(temperature)
         self.top_p = float(top_p)
         self.frequency_penalty = float(frequency_penalty)
@@ -115,7 +262,7 @@ class UnifiedAITranslator(BaseTranslator):
         )
 
         self._log(
-            f"🤖 [AI Query] Model: {self.model} | Lang: '{target_lang}' | "
+            f"🤖 [AI Query] Model: '{self.model}' | Lang: '{target_lang}' | "
             f"Temp: {self.temperature} | TopP: {self.top_p} | MaxTokens: {self.max_tokens}"
         )
 
@@ -137,18 +284,15 @@ class UnifiedAITranslator(BaseTranslator):
             "top_p": self.top_p,
         }
 
-        # Add penalties if supported
         if self.frequency_penalty != 0.0:
             payload["frequency_penalty"] = self.frequency_penalty
         if self.presence_penalty != 0.0:
             payload["presence_penalty"] = self.presence_penalty
 
-        # Reasoning effort for o1/o3-mini/R1 models if applicable
-        if "o1" in self.model or "o3" in self.model or "reasoner" in self.model:
+        if any(k in self.model for k in ["o1", "o3", "o4", "reasoner", "thinking"]):
             payload["reasoning_effort"] = self.reasoning_effort
 
-        # JSON mode
-        if "ollama" not in self.base_url and "reasoner" not in self.model and "o1" not in self.model:
+        if "ollama" not in self.base_url and not any(k in self.model for k in ["reasoner", "o1", "o3", "thinking"]):
             payload["response_format"] = {"type": "json_object"}
 
         headers = {
@@ -228,7 +372,7 @@ class UnifiedAITranslator(BaseTranslator):
                     else:
                         msg = res_json["choices"][0]["message"]
                         if "reasoning_content" in msg and msg["reasoning_content"]:
-                            self._log(f"🧠 [DeepSeek R1 Reasoning] {msg['reasoning_content'][:300]}...")
+                            self._log(f"🧠 [AI Reasoning] {msg['reasoning_content'][:300]}...")
                         raw_text = msg["content"]
 
                     self._log(f"⚡ [AI Output ({duration}s)] snippet: {raw_text[:200]}...")
