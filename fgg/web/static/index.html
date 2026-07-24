@@ -920,7 +920,7 @@
       const aiMaxTokens = parseInt(document.getElementById('aiMaxTokens').value);
       const aiReasoning = document.getElementById('aiReasoning').value;
 
-      const selectedLangs = Array.from(document.querySelectorAll('.chip-item input:checked')).map(c => c.value);
+      const selectedLangs = Array.from(document.querySelectorAll('.lang-item input:checked')).map(c => c.value);
 
       if (!selectedLangs.length) {
         alert("Выберите языки для перевода");
