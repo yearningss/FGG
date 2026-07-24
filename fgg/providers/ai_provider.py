@@ -51,6 +51,10 @@ AI_MODELS: Dict[str, Dict[str, str]] = {
     "o4-mini": {"name": "o4 Mini", "provider": "openai", "model": "o4-mini", "base_url": "https://api.openai.com/v1"},
 
     # --- Anthropic Claude ---
+    "claude-opus-4-8": {"name": "Claude Opus 4.8", "provider": "anthropic", "model": "claude-opus-4.8", "base_url": "https://api.anthropic.com/v1"},
+    "claude-opus-4.8": {"name": "Claude Opus 4.8", "provider": "anthropic", "model": "claude-opus-4.8", "base_url": "https://api.anthropic.com/v1"},
+    "claude-sonnet-4.8": {"name": "Claude Sonnet 4.8", "provider": "anthropic", "model": "claude-sonnet-4.8", "base_url": "https://api.anthropic.com/v1"},
+    "claude-haiku-4.8": {"name": "Claude Haiku 4.8", "provider": "anthropic", "model": "claude-haiku-4.8", "base_url": "https://api.anthropic.com/v1"},
     "claude-opus-4.1": {"name": "Claude Opus 4.1", "provider": "anthropic", "model": "claude-opus-4.1", "base_url": "https://api.anthropic.com/v1"},
     "claude-opus-4": {"name": "Claude Opus 4", "provider": "anthropic", "model": "claude-opus-4", "base_url": "https://api.anthropic.com/v1"},
     "claude-sonnet-4": {"name": "Claude Sonnet 4", "provider": "anthropic", "model": "claude-sonnet-4", "base_url": "https://api.anthropic.com/v1"},
