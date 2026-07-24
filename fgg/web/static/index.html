@@ -984,6 +984,76 @@
         btn.innerText = "Запустить перевод";
       }
     }
+
+    // --- AUTOMATIC SETTINGS PERSISTENCE (LOCAL STORAGE) ---
+    function saveSettings() {
+      const config = {
+        inputFile: document.getElementById('inputFile').value,
+        outputDir: document.getElementById('outputDir').value,
+        provider: document.getElementById('providerSelect').value,
+        aiModel: document.getElementById('aiModelSelect').value,
+        aiCustomModelName: document.getElementById('aiCustomModelName').value,
+        aiApiKey: document.getElementById('aiApiKey').value,
+        aiBaseUrl: document.getElementById('aiBaseUrl').value,
+        aiCustomPrompt: document.getElementById('aiCustomPrompt').value,
+        aiTemp: document.getElementById('aiTemp').value,
+        aiTopP: document.getElementById('aiTopP').value,
+        aiMaxTokens: document.getElementById('aiMaxTokens').value,
+        aiReasoning: document.getElementById('aiReasoning').value,
+        workers: document.getElementById('workers').value,
+        selectedLangs: Array.from(document.querySelectorAll('.lang-item input:checked')).map(c => c.value)
+      };
+      localStorage.setItem('fgg_settings_v2', JSON.stringify(config));
+    }
+
+    function loadSettings() {
+      try {
+        const raw = localStorage.getItem('fgg_settings_v2');
+        if (!raw) return;
+        const config = JSON.parse(raw);
+
+        if (config.inputFile) document.getElementById('inputFile').value = config.inputFile;
+        if (config.outputDir) document.getElementById('outputDir').value = config.outputDir;
+        if (config.provider) {
+          document.getElementById('providerSelect').value = config.provider;
+          onProviderChange(config.provider);
+        }
+        if (config.aiModel) document.getElementById('aiModelSelect').value = config.aiModel;
+        if (config.aiCustomModelName !== undefined) document.getElementById('aiCustomModelName').value = config.aiCustomModelName;
+        if (config.aiApiKey !== undefined) document.getElementById('aiApiKey').value = config.aiApiKey;
+        if (config.aiBaseUrl !== undefined) document.getElementById('aiBaseUrl').value = config.aiBaseUrl;
+        if (config.aiCustomPrompt !== undefined) document.getElementById('aiCustomPrompt').value = config.aiCustomPrompt;
+        if (config.aiTemp) {
+          document.getElementById('aiTemp').value = config.aiTemp;
+          document.getElementById('tempVal').innerText = config.aiTemp;
+        }
+        if (config.aiTopP) {
+          document.getElementById('aiTopP').value = config.aiTopP;
+          document.getElementById('topPVal').innerText = config.aiTopP;
+        }
+        if (config.aiMaxTokens) document.getElementById('aiMaxTokens').value = config.aiMaxTokens;
+        if (config.aiReasoning) document.getElementById('aiReasoning').value = config.aiReasoning;
+        if (config.workers) {
+          document.getElementById('workers').value = config.workers;
+          document.getElementById('workerNum').innerText = config.workers;
+        }
+        if (config.selectedLangs && Array.isArray(config.selectedLangs)) {
+          document.querySelectorAll('.lang-item input').forEach(cb => {
+            cb.checked = config.selectedLangs.includes(cb.value);
+          });
+        }
+      } catch (e) {
+        console.error("Failed to load saved settings", e);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSettings();
+      document.querySelectorAll('input, select, textarea').forEach(el => {
+        el.addEventListener('input', saveSettings);
+        el.addEventListener('change', saveSettings);
+      });
+    });
   </script>
 </body>
 </html>
