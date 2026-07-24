@@ -63,11 +63,12 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
 
         if parsed_url.path == "/api/ping_ai":
             model_key = payload.get("ai_model", "gpt-4o-mini")
+            custom_model_name = payload.get("custom_model_name", "")
             api_key = payload.get("api_key", "")
             raw_base_url = payload.get("base_url", "")
 
             preset = AI_MODELS.get(model_key, AI_MODELS.get("gpt-4o-mini", AI_MODELS["custom"]))
-            actual_model = preset["model"]
+            actual_model = custom_model_name.strip() or preset["model"]
             preset_base_url = preset["base_url"]
             provider_type = preset["provider"]
 
@@ -78,7 +79,6 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
             start_t = time.time()
             ping_ms = 0
 
-            # Try request with primary format, fallback to OpenAI if router fails
             def _try_request(url: str, is_openai: bool, is_anthropic: bool, is_gemini: bool):
                 if is_anthropic:
                     req_url = f"{url}/messages"
@@ -115,10 +115,9 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
                     "ping_ms": ping_ms,
                     "status_code": status_code,
                     "endpoint": final_url,
-                    "status": "🟢 Модель активна и доступна"
+                    "status": "🟢 Модель активна и соединение установлены"
                 })
             except urllib.error.HTTPError as he:
-                # If custom endpoint failed native format, fallback to OpenAI chat completions endpoint
                 if (effective_provider != "openai"):
                     try:
                         fallback_url = normalize_base_url(raw_base_url or preset_base_url, is_openai_compatible=True)
@@ -139,6 +138,7 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
 
                 ping_ms = int((time.time() - start_t) * 1000)
                 error_body = he.read().decode("utf-8", errors="ignore")[:200]
+                status_desc = "🔴 Ошибка авторизации (401 - Проверьте API Ключ)" if he.code == 401 else f"🔴 Ошибка сервера ({he.code})"
                 self._send_json({
                     "success": False,
                     "model_key": model_key,
@@ -147,7 +147,7 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
                     "endpoint": target_url,
                     "error": f"HTTP {he.code}: {he.reason}",
                     "details": error_body,
-                    "status": f"🔴 Ошибка сервера ({he.code})"
+                    "status": status_desc
                 })
             except Exception as exc:
                 ping_ms = int((time.time() - start_t) * 1000)
@@ -169,6 +169,7 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
             provider_type = payload.get("provider", "google")
             
             ai_model = payload.get("ai_model", "gpt-4o-mini")
+            custom_model_name = payload.get("custom_model_name", "")
             api_key = payload.get("api_key", "")
             base_url = payload.get("base_url", "")
             custom_prompt = payload.get("custom_prompt", "")
@@ -194,6 +195,7 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
             if provider_type == "ai":
                 provider = UnifiedAITranslator(
                     model_key=ai_model,
+                    custom_model_name=custom_model_name,
                     api_key=api_key,
                     base_url=base_url,
                     custom_prompt=custom_prompt,
