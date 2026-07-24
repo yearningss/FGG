@@ -16,6 +16,7 @@
       --accent: #238636;
       --accent-hover: #2ea043;
       --blue: #58a6ff;
+      --purple: #bc8cff;
       --red: #f85149;
     }
 
@@ -30,7 +31,6 @@
       min-height: 100vh;
     }
 
-    /* HEADER */
     header {
       background: var(--panel);
       border-bottom: 1px solid var(--border);
@@ -59,16 +59,15 @@
       font-weight: 500;
     }
 
-    /* LAYOUT */
     .container {
-      max-width: 1180px;
+      max-width: 1200px;
       margin: 24px auto;
       padding: 0 16px;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: 420px 1fr;
+      grid-template-columns: 440px 1fr;
       gap: 20px;
     }
 
@@ -77,6 +76,7 @@
       border: 1px solid var(--border);
       border-radius: 6px;
       padding: 16px;
+      margin-bottom: 20px;
     }
 
     .panel-title {
@@ -88,9 +88,11 @@
       border-bottom: 1px solid var(--border);
       text-transform: uppercase;
       letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    /* FORM ELEMENTS */
     .field {
       margin-bottom: 14px;
     }
@@ -103,7 +105,7 @@
       margin-bottom: 4px;
     }
 
-    input[type="text"], select {
+    input[type="text"], input[type="password"], select, textarea {
       width: 100%;
       background: var(--bg);
       border: 1px solid var(--border);
@@ -114,9 +116,27 @@
       font-family: inherit;
     }
 
-    input[type="text"]:focus, select:focus {
+    input[type="text"]:focus, select:focus, textarea:focus {
       outline: none;
       border-color: var(--border-focus);
+    }
+
+    /* AI CONFIG SUBPANEL */
+    .ai-panel {
+      display: none;
+      background: rgba(188, 140, 255, 0.05);
+      border: 1px solid rgba(188, 140, 255, 0.2);
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+
+    .ai-panel-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--purple);
+      margin-bottom: 8px;
+      text-transform: uppercase;
     }
 
     /* CATEGORIZED LANGUAGES */
@@ -135,7 +155,7 @@
     }
 
     .lang-container {
-      max-height: 240px;
+      max-height: 200px;
       overflow-y: auto;
       background: var(--bg);
       border: 1px solid var(--border);
@@ -176,7 +196,6 @@
       cursor: pointer;
     }
 
-    /* BUTTONS */
     .btn-primary {
       width: 100%;
       background: var(--accent);
@@ -222,16 +241,31 @@
       padding: 10px;
       font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", monospace;
       font-size: 12px;
-      height: 480px;
+      height: 240px;
       overflow-y: auto;
       white-space: pre-wrap;
       color: var(--text);
+    }
+
+    /* DEDICATED AI STREAM LOG */
+    .ai-log-box {
+      background: #090c10;
+      border: 1px solid rgba(188, 140, 255, 0.3);
+      border-radius: 6px;
+      padding: 10px;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", monospace;
+      font-size: 11px;
+      height: 220px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      color: var(--purple);
     }
 
     .log-row { margin-bottom: 4px; }
     .log-success { color: #56d364; }
     .log-error { color: var(--red); }
     .log-info { color: var(--blue); }
+    .log-ai { color: var(--purple); }
   </style>
 </head>
 <body>
@@ -239,7 +273,7 @@
   <header>
     <div class="brand">
       FGG Fast Global Translator
-      <span class="brand-tag">v2.0</span>
+      <span class="brand-tag">v2.0 (AI Multi-Model Enabled)</span>
     </div>
   </header>
 
@@ -247,121 +281,160 @@
     <div class="grid">
       
       <!-- LEFT PANEL -->
-      <div class="panel">
-        <div class="panel-title">Конфигурация</div>
+      <div>
+        <div class="panel">
+          <div class="panel-title">Конфигурация</div>
 
-        <div class="field">
-          <label>Исходный файл</label>
-          <input type="text" id="inputFile" value="оригинал/rus.txt">
-        </div>
+          <div class="field">
+            <label>Исходный файл</label>
+            <input type="text" id="inputFile" value="оригинал/rus.txt">
+          </div>
 
-        <div class="field">
-          <label>Папка вывода</label>
-          <input type="text" id="outputDir" value="переводы">
-        </div>
+          <div class="field">
+            <label>Папка вывода</label>
+            <input type="text" id="outputDir" value="переводы">
+          </div>
 
-        <div class="field">
-          <label>Движок перевода</label>
-          <select id="providerSelect">
-            <option value="google">Google Translate</option>
-            <option value="openai">OpenAI GPT-4o</option>
-            <option value="mock">Mock Engine (Тест)</option>
-          </select>
-        </div>
+          <div class="field">
+            <label>Движок перевода</label>
+            <select id="providerSelect" onchange="onProviderChange(this.value)">
+              <option value="google">Google Translate (Бесплатно & Быстро)</option>
+              <option value="ai">🤖 AI / LLM Engine (GPT-4o, Claude, Gemini, DeepSeek, Ollama)</option>
+              <option value="mock">Mock Engine (Тестовый режим)</option>
+            </select>
+          </div>
 
-        <div class="field">
-          <label>Потоки (Workers): <span id="workerNum" style="color:var(--text-bold)">5</span></label>
-          <input type="range" id="workers" min="1" max="15" value="5" style="width:100%" oninput="document.getElementById('workerNum').innerText = this.value">
-        </div>
+          <!-- DYNAMIC AI CONFIG PANEL -->
+          <div class="ai-panel" id="aiConfigPanel">
+            <div class="ai-panel-title">🤖 Настройки ИИ-Модели</div>
 
-        <div class="field">
-          <div class="btn-group">
-            <label>Языки перевода (по категориям)</label>
-            <div>
-              <button class="btn-text" onclick="toggleLangs(true)">Все</button> | 
-              <button class="btn-text" onclick="toggleLangs(false)">Сброс</button>
+            <div class="field">
+              <label>Модель ИИ</label>
+              <select id="aiModelSelect" onchange="onAiModelChange(this.value)">
+                <option value="openai-gpt4o">OpenAI GPT-4o</option>
+                <option value="openai-gpt4o-mini" selected>OpenAI GPT-4o mini</option>
+                <option value="anthropic-claude-35-sonnet">Anthropic Claude 3.5 Sonnet</option>
+                <option value="anthropic-claude-3-haiku">Anthropic Claude 3 Haiku</option>
+                <option value="gemini-15-pro">Google Gemini 1.5 Pro</option>
+                <option value="gemini-15-flash">Google Gemini 1.5 Flash</option>
+                <option value="deepseek-v3">DeepSeek V3</option>
+                <option value="deepseek-r1">DeepSeek R1 (Reasoning)</option>
+                <option value="local-ollama">Local Ollama / vLLM (localhost:11434)</option>
+                <option value="openrouter">OpenRouter (All Models)</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>API Ключ (Для Ollama можно оставить пустым)</label>
+              <input type="password" id="aiApiKey" placeholder="sk-...">
+            </div>
+
+            <div class="field">
+              <label>Custom Base URL (Опционально)</label>
+              <input type="text" id="aiBaseUrl" placeholder="https://api.openai.com/v1">
+            </div>
+
+            <div class="field">
+              <label>Игровой контекст / Промпт</label>
+              <textarea id="aiCustomPrompt" rows="2" placeholder="Особенности жанра, стиль текста (RPG, хулиганский сленг, фэнтези)"></textarea>
             </div>
           </div>
-          
-          <div class="lang-container">
-            <!-- 🔤 Латиница -->
-            <div class="category-group">
-              <div class="category-title">🔤 Латиница (Европа & Мир)</div>
-              <div class="lang-grid">
-                <label class="lang-item"><input type="checkbox" value="en" checked> English (en)</label>
-                <label class="lang-item"><input type="checkbox" value="de" checked> Deutsch (de)</label>
-                <label class="lang-item"><input type="checkbox" value="fr"> Français (fr)</label>
-                <label class="lang-item"><input type="checkbox" value="es"> Español (es)</label>
-                <label class="lang-item"><input type="checkbox" value="it"> Italiano (it)</label>
-                <label class="lang-item"><input type="checkbox" value="pt"> Português (pt)</label>
-                <label class="lang-item"><input type="checkbox" value="pl"> Polski (pl)</label>
-                <label class="lang-item"><input type="checkbox" value="tr"> Türkçe (tr)</label>
-                <label class="lang-item"><input type="checkbox" value="nl"> Nederlands (nl)</label>
-                <label class="lang-item"><input type="checkbox" value="sv"> Svenska (sv)</label>
-                <label class="lang-item"><input type="checkbox" value="cs"> Čeština (cs)</label>
-                <label class="lang-item"><input type="checkbox" value="hu"> Magyar (hu)</label>
-                <label class="lang-item"><input type="checkbox" value="ro"> Română (ro)</label>
-                <label class="lang-item"><input type="checkbox" value="da"> Dansk (da)</label>
-                <label class="lang-item"><input type="checkbox" value="no"> Norsk (no)</label>
-                <label class="lang-item"><input type="checkbox" value="fi"> Suomi (fi)</label>
+
+          <div class="field">
+            <label>Потоки (Workers): <span id="workerNum" style="color:var(--text-bold)">5</span></label>
+            <input type="range" id="workers" min="1" max="15" value="5" style="width:100%" oninput="document.getElementById('workerNum').innerText = this.value">
+          </div>
+
+          <div class="field">
+            <div class="btn-group">
+              <label>Языки перевода (по категориям)</label>
+              <div>
+                <button class="btn-text" onclick="toggleLangs(true)">Все</button> | 
+                <button class="btn-text" onclick="toggleLangs(false)">Сброс</button>
               </div>
             </div>
-
-            <!-- ⛩️ Иероглифы & Азия -->
-            <div class="category-group">
-              <div class="category-title">⛩️ Иероглифы & Азия</div>
-              <div class="lang-grid">
-                <label class="lang-item"><input type="checkbox" value="ja"> 日本語 (ja)</label>
-                <label class="lang-item"><input type="checkbox" value="zh-cn"> 简体中文 (zh-CN)</label>
-                <label class="lang-item"><input type="checkbox" value="zh-tw"> 繁體中文 (zh-TW)</label>
-                <label class="lang-item"><input type="checkbox" value="ko"> 한국어 (ko)</label>
-                <label class="lang-item"><input type="checkbox" value="th"> ไทย (th)</label>
-                <label class="lang-item"><input type="checkbox" value="vi"> Tiếng Việt (vi)</label>
-                <label class="lang-item"><input type="checkbox" value="hi"> हिन्दी (hi)</label>
+            
+            <div class="lang-container">
+              <!-- 🔤 Латиница -->
+              <div class="category-group">
+                <div class="category-title">🔤 Латиница (Европа & Мир)</div>
+                <div class="lang-grid">
+                  <label class="lang-item"><input type="checkbox" value="en" checked> English (en)</label>
+                  <label class="lang-item"><input type="checkbox" value="de" checked> Deutsch (de)</label>
+                  <label class="lang-item"><input type="checkbox" value="fr"> Français (fr)</label>
+                  <label class="lang-item"><input type="checkbox" value="es"> Español (es)</label>
+                  <label class="lang-item"><input type="checkbox" value="it"> Italiano (it)</label>
+                  <label class="lang-item"><input type="checkbox" value="pt"> Português (pt)</label>
+                  <label class="lang-item"><input type="checkbox" value="pl"> Polski (pl)</label>
+                  <label class="lang-item"><input type="checkbox" value="tr"> Türkçe (tr)</label>
+                </div>
               </div>
-            </div>
 
-            <!-- 🪆 Кириллица -->
-            <div class="category-group">
-              <div class="category-title">🪆 Кириллица</div>
-              <div class="lang-grid">
-                <label class="lang-item"><input type="checkbox" value="uk"> Українська (uk)</label>
-                <label class="lang-item"><input type="checkbox" value="be"> Беларуская (be)</label>
-                <label class="lang-item"><input type="checkbox" value="bg"> Български (bg)</label>
-                <label class="lang-item"><input type="checkbox" value="kk"> Қазақша (kk)</label>
-                <label class="lang-item"><input type="checkbox" value="ky"> Кыргызча (ky)</label>
-                <label class="lang-item"><input type="checkbox" value="sr"> Српски (sr)</label>
-                <label class="lang-item"><input type="checkbox" value="mn"> Монгол (mn)</label>
-                <label class="lang-item"><input type="checkbox" value="tg"> Тоҷикӣ (tg)</label>
-                <label class="lang-item"><input type="checkbox" value="tt"> Татарча (tt)</label>
+              <!-- ⛩️ Иероглифы & Азия -->
+              <div class="category-group">
+                <div class="category-title">⛩️ Иероглифы & Азия</div>
+                <div class="lang-grid">
+                  <label class="lang-item"><input type="checkbox" value="ja"> 日本語 (ja)</label>
+                  <label class="lang-item"><input type="checkbox" value="zh-cn"> 简体中文 (zh-CN)</label>
+                  <label class="lang-item"><input type="checkbox" value="zh-tw"> 繁體中文 (zh-TW)</label>
+                  <label class="lang-item"><input type="checkbox" value="ko"> 한국어 (ko)</label>
+                  <label class="lang-item"><input type="checkbox" value="th"> ไทย (th)</label>
+                  <label class="lang-item"><input type="checkbox" value="vi"> Tiếng Việt (vi)</label>
+                </div>
               </div>
-            </div>
 
-            <!-- 🌙 Арабское письмо -->
-            <div class="category-group">
-              <div class="category-title">🌙 Арабское письмо & Вязь</div>
-              <div class="lang-grid">
-                <label class="lang-item"><input type="checkbox" value="ar"> العربية (ar)</label>
-                <label class="lang-item"><input type="checkbox" value="fa"> فارسی (fa)</label>
-                <label class="lang-item"><input type="checkbox" value="he"> עברית (he)</label>
+              <!-- 🪆 Кириллица -->
+              <div class="category-group">
+                <div class="category-title">🪆 Кириллица</div>
+                <div class="lang-grid">
+                  <label class="lang-item"><input type="checkbox" value="uk"> Українська (uk)</label>
+                  <label class="lang-item"><input type="checkbox" value="be"> Беларуская (be)</label>
+                  <label class="lang-item"><input type="checkbox" value="bg"> Български (bg)</label>
+                  <label class="lang-item"><input type="checkbox" value="kk"> Қазақша (kk)</label>
+                </div>
+              </div>
+
+              <!-- 🌙 Арабское письмо -->
+              <div class="category-group">
+                <div class="category-title">🌙 Арабское письмо & Вязь</div>
+                <div class="lang-grid">
+                  <label class="lang-item"><input type="checkbox" value="ar"> العربية (ar)</label>
+                  <label class="lang-item"><input type="checkbox" value="fa"> فارسی (fa)</label>
+                  <label class="lang-item"><input type="checkbox" value="he"> עברית (he)</label>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <button class="btn-primary" id="startBtn" onclick="startTranslation()">Запустить перевод</button>
+          <button class="btn-primary" id="startBtn" onclick="startTranslation()">Запустить перевод</button>
+        </div>
       </div>
 
       <!-- RIGHT PANEL -->
-      <div class="panel">
-        <div class="panel-title">Лог вывода</div>
+      <div>
+        <!-- SYSTEM LOG -->
+        <div class="panel">
+          <div class="panel-title">Системный лог вывода</div>
 
-        <div class="progress-track">
-          <div class="progress-bar" id="progressBar"></div>
+          <div class="progress-track">
+            <div class="progress-bar" id="progressBar"></div>
+          </div>
+
+          <div class="log-box" id="logBox">
+            <div class="log-row">[system] FGG ready. Select options and press 'Запустить перевод'.</div>
+          </div>
         </div>
 
-        <div class="log-box" id="logBox">
-          <div class="log-row">[system] FGG ready. Select options and press 'Запустить перевод'.</div>
+        <!-- DEDICATED AI THOUGHT & STREAM LOG -->
+        <div class="panel">
+          <div class="panel-title">
+            🧠 Лог мыслей & сырых ответов ИИ
+            <span style="font-size:10px; color:var(--purple);">STREAM LOG</span>
+          </div>
+
+          <div class="ai-log-box" id="aiLogBox">
+            <div class="log-row log-ai">[AI Log] Здесь отображаются мысли ИИ (Reasoning), сырые JSON отклики и latency моделей.</div>
+          </div>
         </div>
       </div>
 
@@ -369,6 +442,22 @@
   </div>
 
   <script>
+    function onProviderChange(val) {
+      const aiPanel = document.getElementById('aiConfigPanel');
+      aiPanel.style.display = (val === 'ai') ? 'block' : 'none';
+    }
+
+    function onAiModelChange(modelKey) {
+      const baseUrlInput = document.getElementById('aiBaseUrl');
+      if (modelKey === 'local-ollama') {
+        baseUrlInput.value = 'http://localhost:11434/v1';
+      } else if (modelKey === 'openrouter') {
+        baseUrlInput.value = 'https://openrouter.ai/api/v1';
+      } else {
+        baseUrlInput.value = '';
+      }
+    }
+
     function toggleLangs(state) {
       document.querySelectorAll('.lang-item input').forEach(cb => cb.checked = state);
     }
@@ -382,6 +471,15 @@
       box.scrollTop = box.scrollHeight;
     }
 
+    function appendAiLog(text) {
+      const box = document.getElementById('aiLogBox');
+      const row = document.createElement('div');
+      row.className = 'log-row log-ai';
+      row.innerText = text;
+      box.appendChild(row);
+      box.scrollTop = box.scrollHeight;
+    }
+
     async function startTranslation() {
       const btn = document.getElementById('startBtn');
       const bar = document.getElementById('progressBar');
@@ -390,6 +488,13 @@
       const outputDir = document.getElementById('outputDir').value;
       const workers = parseInt(document.getElementById('workers').value);
       const provider = document.getElementById('providerSelect').value;
+      
+      // AI Parameters
+      const aiModel = document.getElementById('aiModelSelect').value;
+      const aiApiKey = document.getElementById('aiApiKey').value;
+      const aiBaseUrl = document.getElementById('aiBaseUrl').value;
+      const aiCustomPrompt = document.getElementById('aiCustomPrompt').value;
+
       const selectedLangs = Array.from(document.querySelectorAll('.lang-item input:checked')).map(c => c.value);
 
       if (!selectedLangs.length) {
@@ -404,6 +509,10 @@
       appendLog(`\n[job] Starting translation for: ${selectedLangs.join(', ')}`, 'log-info');
       appendLog(`[job] Input: ${inputFile} | Provider: ${provider.toUpperCase()} | Workers: ${workers}`);
 
+      if (provider === 'ai') {
+        appendAiLog(`\n🤖 [AI Engine Started] Model: ${aiModel} | Endpoint: ${aiBaseUrl || 'default'}`);
+      }
+
       try {
         const res = await fetch('/api/translate', {
           method: 'POST',
@@ -413,6 +522,11 @@
             output_dir: outputDir,
             langs: selectedLangs,
             workers: workers,
+            provider: provider,
+            ai_model: aiModel,
+            api_key: aiApiKey,
+            base_url: aiBaseUrl,
+            custom_prompt: aiCustomPrompt,
             mock: provider === 'mock'
           })
         });
@@ -425,6 +539,11 @@
             appendLog(`  -> [${r.lang.toUpperCase()}] Translated: ${r.translated}, Reused: ${r.reused}, Elapsed: ${r.elapsed}s`, 'log-success');
             appendLog(`     Output: ${r.output_file}`);
           });
+
+          // Display AI stream & reasoning logs
+          if (data.ai_logs && data.ai_logs.length) {
+            data.ai_logs.forEach(logLine => appendAiLog(logLine));
+          }
         } else {
           bar.style.width = '0%';
           appendLog(`[error] ${data.error}`, 'log-error');

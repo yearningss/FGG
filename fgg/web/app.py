@@ -10,7 +10,7 @@ import os
 import sys
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List
 import urllib.parse
 
 # Ensure UTF-8 output on Windows console
@@ -23,6 +23,7 @@ if hasattr(sys.stdout, "reconfigure"):
 from fgg.core.engine import TranslationEngine
 from fgg.providers.google_provider import GoogleProvider
 from fgg.providers.mock_provider import MockProvider
+from fgg.providers.ai_provider import UnifiedAITranslator
 
 WEB_DIR = Path(__file__).parent
 STATIC_DIR = WEB_DIR / "static"
@@ -61,7 +62,13 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
             output_dir = payload.get("output_dir") or str(PROJECT_ROOT / "переводы")
             langs = payload.get("langs", ["en"])
             workers = payload.get("workers", 5)
-            mock_mode = payload.get("mock", False)
+            provider_type = payload.get("provider", "google")
+            
+            # AI options
+            ai_model = payload.get("ai_model", "openai-gpt4o-mini")
+            api_key = payload.get("api_key", "")
+            base_url = payload.get("base_url", "")
+            custom_prompt = payload.get("custom_prompt", "")
 
             inp_path = Path(input_file)
             out_dir = Path(output_dir)
@@ -70,7 +77,25 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
                 self._send_json({"success": False, "error": f"File not found: {inp_path}"}, status=400)
                 return
 
-            provider = MockProvider() if mock_mode else GoogleProvider()
+            ai_logs: List[str] = []
+
+            def _ai_log_cb(msg: str):
+                ai_logs.append(msg)
+
+            # Select Provider
+            if provider_type == "ai":
+                provider = UnifiedAITranslator(
+                    model_key=ai_model,
+                    api_key=api_key,
+                    base_url=base_url,
+                    custom_prompt=custom_prompt,
+                    log_callback=_ai_log_cb,
+                )
+            elif provider_type == "mock":
+                provider = MockProvider()
+            else:
+                provider = GoogleProvider()
+
             engine = TranslationEngine(provider=provider, workers=workers)
 
             results = []
@@ -94,7 +119,7 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
                     }
                 )
 
-            self._send_json({"success": True, "results": results})
+            self._send_json({"success": True, "results": results, "ai_logs": ai_logs})
         else:
             self.send_error(404, "Endpoint not found")
 

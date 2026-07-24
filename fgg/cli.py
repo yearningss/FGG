@@ -1,6 +1,6 @@
 """
 FGG Advanced Command Line Interface (CLI) 2.0.
-Features ASCII Art header, rich terminal progress bars, QA summaries, and subcommands.
+Features ASCII Art header, rich terminal progress bars, QA summaries, and AI Multi-Model support.
 """
 
 from __future__ import annotations
@@ -20,15 +20,14 @@ if hasattr(sys.stdout, "reconfigure"):
 from fgg.core.engine import TranslationEngine
 from fgg.providers.google_provider import GoogleProvider
 from fgg.providers.mock_provider import MockProvider
-from fgg.providers.openai_provider import OpenAIProvider
+from fgg.providers.ai_provider import UnifiedAITranslator
 from fgg.web.app import start_web_server
 
 ASCII_BANNER = r"""
   FGG  --  Fast Global Translator
-  v2.0 -- High Performance Game Localization Engine
+  v2.0 -- High Performance Game Localization Engine (AI Multi-Model Enabled)
 """
 
-# Categorized Languages
 LANGUAGES_BY_CATEGORY: Dict[str, Dict[str, Tuple[str, str]]] = {
     "Латиница (Европа & Мир)": {
         "en": ("en", "ENGLISH"),
@@ -65,7 +64,6 @@ LANGUAGES_BY_CATEGORY: Dict[str, Dict[str, Tuple[str, str]]] = {
         "ky": ("ky", "KYRGYZ"),
         "sr": ("sr", "SERBIAN"),
         "mn": ("mn", "MONGOLIAN"),
-        "mk": ("mk", "MACEDONIAN"),
         "tg": ("tg", "TAJIK"),
         "tt": ("tt", "TATAR"),
     },
@@ -76,7 +74,6 @@ LANGUAGES_BY_CATEGORY: Dict[str, Dict[str, Tuple[str, str]]] = {
     },
 }
 
-# Flat dictionary for lookup
 LANGUAGES: Dict[str, Tuple[str, str]] = {}
 for cat_langs in LANGUAGES_BY_CATEGORY.values():
     LANGUAGES.update(cat_langs)
@@ -86,7 +83,7 @@ def run_cli() -> int:
     parser = argparse.ArgumentParser(
         description="FGG 2.0 -- High Performance Game Localization Engine",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="Example: python final_translator.py --langs de en ja --workers 10",
+        epilog="Example: python final_translator.py --langs de en ja --provider ai --ai-model deepseek-v3",
     )
 
     parser.add_argument("--langs", nargs="+", default=list(LANGUAGES.keys()), help="Languages to translate")
@@ -94,8 +91,14 @@ def run_cli() -> int:
     parser.add_argument("--output-dir", type=Path, default=Path(__file__).parent.parent / "переводы")
     parser.add_argument("--force", action="store_true", help="Force re-translation of existing keys")
     parser.add_argument("--workers", type=int, default=5, help="Number of parallel worker threads")
-    parser.add_argument("--provider", choices=["google", "openai", "mock"], default="google", help="Translation backend")
-    parser.add_argument("--openai-key", type=str, default="", help="OpenAI API key")
+    parser.add_argument("--provider", choices=["google", "ai", "mock"], default="google", help="Translation backend")
+    
+    # AI CLI arguments
+    parser.add_argument("--ai-model", type=str, default="openai-gpt4o-mini", help="AI model key (gpt4o, claude, gemini, deepseek, ollama)")
+    parser.add_argument("--api-key", type=str, default="", help="AI provider API key")
+    parser.add_argument("--base-url", type=str, default="", help="Custom base URL endpoint")
+    parser.add_argument("--ai-prompt", type=str, default="", help="Custom AI localization prompt")
+
     parser.add_argument("--web", action="store_true", help="Launch FGG Web UI Dashboard")
     parser.add_argument("--port", type=int, default=8080, help="Web UI port")
 
@@ -112,8 +115,17 @@ def run_cli() -> int:
         return 1
 
     # Select Provider
-    if args.provider == "openai":
-        provider = OpenAIProvider(api_key=args.openai_key)
+    if args.provider == "ai":
+        def _cli_ai_log(msg: str):
+            print(f"  {msg}")
+
+        provider = UnifiedAITranslator(
+            model_key=args.ai_model,
+            api_key=args.api_key,
+            base_url=args.base_url,
+            custom_prompt=args.ai_prompt,
+            log_callback=_cli_ai_log,
+        )
     elif args.provider == "mock":
         provider = MockProvider()
     else:
@@ -124,7 +136,7 @@ def run_cli() -> int:
     print(f"[*] Input File : {args.input}")
     print(f"[*] Output Dir : {args.output_dir}")
     print(f"[*] Threads    : {args.workers}")
-    print(f"[*] Provider   : {args.provider.upper()}")
+    print(f"[*] Provider   : {args.provider.upper()} ({args.ai_model if args.provider == 'ai' else ''})")
     print("=" * 65)
 
     failed_langs = []
