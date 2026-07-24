@@ -577,6 +577,11 @@
               </select>
             </div>
 
+            <div class="field">
+              <label>Кастомное имя / ID модели (Опционально, напр: anthropic/claude-3.5-sonnet)</label>
+              <input type="text" id="aiCustomModelName" placeholder="Оставьте пустым для модели по умолчанию">
+            </div>
+
             <!-- BUTTON: TEST MODEL PING & CONNECTION -->
             <button class="btn-secondary" id="pingBtn" onclick="pingAiModel()">⚡ Проверить модель подробнее (Пинг & Соединение)</button>
 
@@ -827,6 +832,7 @@
       const pingBox = document.getElementById('pingResultBox');
       
       const aiModel = document.getElementById('aiModelSelect').value;
+      const customModelName = document.getElementById('aiCustomModelName').value;
       const aiApiKey = document.getElementById('aiApiKey').value;
       const aiBaseUrl = document.getElementById('aiBaseUrl').value;
 
@@ -837,7 +843,7 @@
       document.getElementById('pingStatus').innerText = 'Тестирование...';
       document.getElementById('pingMs').innerText = '...';
       document.getElementById('pingHttp').innerText = '...';
-      document.getElementById('pingModelId').innerText = aiModel;
+      document.getElementById('pingModelId').innerText = customModelName || aiModel;
       document.getElementById('pingEndpoint').innerText = aiBaseUrl;
 
       try {
@@ -846,6 +852,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ai_model: aiModel,
+            custom_model_name: customModelName,
             api_key: aiApiKey,
             base_url: aiBaseUrl
           })
@@ -856,10 +863,10 @@
         document.getElementById('pingStatus').style.color = data.success ? '#56d364' : '#f85149';
         document.getElementById('pingMs').innerText = `${data.ping_ms} ms`;
         document.getElementById('pingHttp').innerText = data.status_code ? `${data.status_code}` : 'N/A';
-        document.getElementById('pingModelId').innerText = data.model_id || aiModel;
+        document.getElementById('pingModelId').innerText = data.model_id || customModelName || aiModel;
         document.getElementById('pingEndpoint').innerText = data.endpoint || aiBaseUrl;
 
-        appendAiLog(`📡 [Ping Test] Model: ${aiModel} | Status: ${data.status} | Latency: ${data.ping_ms}ms | HTTP: ${data.status_code}`);
+        appendAiLog(`📡 [Ping Test] Model: ${customModelName || aiModel} | Status: ${data.status} | Latency: ${data.ping_ms}ms | HTTP: ${data.status_code}`);
         if (data.error) {
           appendAiLog(`❌ [Ping Details] ${data.error}`);
         }

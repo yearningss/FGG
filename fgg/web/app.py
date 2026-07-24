@@ -64,8 +64,8 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
         if parsed_url.path == "/api/ping_ai":
             model_key = payload.get("ai_model", "gpt-4o-mini")
             custom_model_name = payload.get("custom_model_name", "")
-            api_key = payload.get("api_key", "")
-            raw_base_url = payload.get("base_url", "")
+            raw_key = payload.get("api_key", "").strip()
+            raw_base_url = payload.get("base_url", "").strip()
 
             preset = AI_MODELS.get(model_key, AI_MODELS.get("gpt-4o-mini", AI_MODELS["custom"]))
             actual_model = custom_model_name.strip() or preset["model"]
@@ -77,21 +77,20 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
             target_url = normalize_base_url(raw_base_url or preset_base_url, is_openai_compatible=(effective_provider == "openai"))
 
             start_t = time.time()
-            ping_ms = 0
+            auth_token = raw_key if raw_key.startswith("Bearer ") else f"Bearer {raw_key}"
 
-            def _try_request(url: str, is_openai: bool, is_anthropic: bool, is_gemini: bool):
-                if is_anthropic:
-                    req_url = f"{url}/messages"
-                    data = json.dumps({"model": actual_model, "max_tokens": 5, "messages": [{"role": "user", "content": "ping"}]}).encode("utf-8")
-                    headers = {"Content-Type": "application/json", "x-api-key": api_key, "anthropic-version": "2023-06-01"}
-                elif is_gemini:
-                    req_url = f"{url}/models/{actual_model}:generateContent?key={api_key}"
-                    data = json.dumps({"contents": [{"parts": [{"text": "ping"}]}], "generationConfig": {"maxOutputTokens": 5}}).encode("utf-8")
-                    headers = {"Content-Type": "application/json"}
-                else:
-                    req_url = f"{url}/chat/completions"
-                    data = json.dumps({"model": actual_model, "messages": [{"role": "user", "content": "ping"}], "max_tokens": 5}).encode("utf-8")
-                    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key or 'ollama'}"}
+            def _try_ping(req_url: str, auth_header: str):
+                data = json.dumps({
+                    "model": actual_model,
+                    "messages": [{"role": "user", "content": "ping"}],
+                    "max_tokens": 5
+                }).encode("utf-8")
+                
+                headers = {
+                    "Content-Type": "application/json",
+                    "User-Agent": "OpenAI/Python 1.30.0 FGG/2.0",
+                    "Authorization": auth_header
+                }
 
                 req = urllib.request.Request(req_url, data=data, headers=headers)
                 t0 = time.time()
@@ -102,11 +101,10 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
                     return resp.status, p_ms, m_id, req_url
 
             try:
-                is_a = (effective_provider == "anthropic")
-                is_g = (effective_provider == "gemini")
-                is_o = (effective_provider == "openai")
-                
-                status_code, ping_ms, model_id, final_url = _try_request(target_url, is_o, is_a, is_g)
+                # 1. Try standard /chat/completions endpoint
+                req_endpoint = f"{target_url}/chat/completions"
+                status_code, ping_ms, model_id, final_url = _try_ping(req_endpoint, auth_token)
+
                 self._send_json({
                     "success": True,
                     "model_key": model_key,
@@ -115,13 +113,17 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
                     "ping_ms": ping_ms,
                     "status_code": status_code,
                     "endpoint": final_url,
-                    "status": "🟢 Модель активна и соединение установлены"
+                    "status": "🟢 Ключ валиден и модель доступна!"
                 })
             except urllib.error.HTTPError as he:
-                if (effective_provider != "openai"):
+                ping_ms = int((time.time() - start_t) * 1000)
+                error_body = he.read().decode("utf-8", errors="ignore")[:300]
+                
+                # If 401, try raw key without 'Bearer ' prefix
+                if he.code == 401 and not raw_key.startswith("Bearer "):
                     try:
-                        fallback_url = normalize_base_url(raw_base_url or preset_base_url, is_openai_compatible=True)
-                        status_code, ping_ms, model_id, final_url = _try_request(fallback_url, True, False, False)
+                        req_endpoint = f"{target_url}/chat/completions"
+                        status_code, ping_ms, model_id, final_url = _try_ping(req_endpoint, raw_key)
                         self._send_json({
                             "success": True,
                             "model_key": model_key,
@@ -130,15 +132,13 @@ class FGGHTTPRequestHandler(SimpleHTTPRequestHandler):
                             "ping_ms": ping_ms,
                             "status_code": status_code,
                             "endpoint": final_url,
-                            "status": "🟢 Модель доступна (через OpenAI-совместимый прокси)"
+                            "status": "🟢 Ключ валиден (без Bearer)!"
                         })
                         return
                     except Exception:
                         pass
 
-                ping_ms = int((time.time() - start_t) * 1000)
-                error_body = he.read().decode("utf-8", errors="ignore")[:200]
-                status_desc = "🔴 Ошибка авторизации (401 - Проверьте API Ключ)" if he.code == 401 else f"🔴 Ошибка сервера ({he.code})"
+                status_desc = "🔴 401 Unauthorized (Роутер отверг ключ или имя модели)" if he.code == 401 else f"🔴 Ошибка сервера ({he.code})"
                 self._send_json({
                     "success": False,
                     "model_key": model_key,
